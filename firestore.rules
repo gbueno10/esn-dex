@@ -1,0 +1,61 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users collection - users can only read/write their own document
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Yesenters collection
+    match /yesenters/{esnnerId} {
+      // Public read access if visible is true
+      allow read: if resource.data.visible == true || 
+                     (request.auth != null && 
+                      (request.auth.uid == esnnerId || 
+                       get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'));
+      
+      // Write access only for the owner or admin
+      allow write: if request.auth != null && 
+                      (request.auth.uid == esnnerId || 
+                       get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
+    }
+    
+    // Unlocks collection
+    match /unlocks/{unlockId} {
+      // Read access for participant or esnner involved
+      allow read: if request.auth != null && 
+                     (request.auth.uid == resource.data.participantId || 
+                      request.auth.uid == resource.data.esnnerId);
+      
+      // No client-side creation - only through API with Admin SDK
+      allow create: if false;
+      
+      // No updates or deletes
+      allow update, delete: if false;
+    }
+    
+    // Challenges collection
+    match /challenges/{challengeId} {
+      // Public read access
+      allow read: if true;
+      
+      // Write access only for admins
+      allow write: if request.auth != null && 
+                      get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // Challenge progress collection
+    match /challenge_progress/{progressId} {
+      // Read access for the participant
+      allow read: if request.auth != null && 
+                     request.auth.uid == resource.data.participantId;
+      
+      // Create/update access for the participant
+      allow create, update: if request.auth != null && 
+                               request.auth.uid == request.resource.data.participantId;
+      
+      // No public delete
+      allow delete: if false;
+    }
+  }
+}

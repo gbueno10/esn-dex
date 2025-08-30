@@ -1,0 +1,12 @@
+{
+  "name": "Meet Your ESNners",
+  "short_name": "ESNners",
+  "description": "Connect with ESN volunteers and unlock their profiles",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "orientation": "portrait",
+  "scope": "/",
+  "icons": []
+}

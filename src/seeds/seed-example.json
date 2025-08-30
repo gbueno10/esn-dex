@@ -1,0 +1,62 @@
+{
+  "yesenters": [
+    {
+      "id": "esnner1",
+      "name": "Maria Santos",
+      "photoURL": "https://images.unsplash.com/photo-1494790108755-2616c26ce7b8?w=400",
+      "starters": [
+        "Ask me about my favorite city in Europe!",
+        "I love talking about sustainable travel",
+        "Let's discuss the best local food spots"
+      ],
+      "interests": ["Travel", "Photography", "Sustainability", "Food"],
+      "bio": "ESN volunteer passionate about connecting cultures and promoting sustainable tourism. Always excited to share hidden gems and local experiences!",
+      "socials": {
+        "instagram": "@maria_travels",
+        "linkedin": "https://linkedin.com/in/maria-santos"
+      },
+      "visible": true
+    },
+    {
+      "id": "esnner2", 
+      "name": "João Silva",
+      "photoURL": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400",
+      "starters": [
+        "Ask me about learning languages quickly",
+        "I can recommend the best study spots in the city"
+      ],
+      "interests": ["Languages", "Technology", "Music", "Gaming"],
+      "bio": "Computer Science student and ESN member. Fluent in 5 languages and always ready to help with tech tips or city navigation!",
+      "socials": {
+        "instagram": "@joao_codes"
+      },
+      "visible": true
+    }
+  ],
+  "challenges": [
+    {
+      "id": "challenge1",
+      "title": "Make a new international friend",
+      "description": "Connect with someone from a different country and exchange contact information",
+      "active": true
+    },
+    {
+      "id": "challenge2",
+      "title": "Learn a new phrase in a foreign language", 
+      "description": "Ask an ESNner to teach you how to say something in their native language",
+      "active": true
+    },
+    {
+      "id": "challenge3",
+      "title": "Take a photo with an ESNner",
+      "description": "Get a selfie with one of our awesome volunteers!",
+      "active": true
+    },
+    {
+      "id": "challenge4",
+      "title": "Share your home country's culture",
+      "description": "Tell someone about a tradition, food, or custom from your home country",
+      "active": true
+    }
+  ]
+}
