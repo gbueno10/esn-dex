@@ -6,9 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
   title: "Meet Your ESNners",
-  description: "Connect with ESN volunteers and unlock their profiles",
-  viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no",
-  themeColor: "#000000",
+  description: "Connect with ESN volunteers and unlock their profiles"
 };
 
 export default function RootLayout({

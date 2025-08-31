@@ -123,7 +123,7 @@ export default function EsnerDetailPage() {
     };
 
     fetchData();
-  }, [user, authLoading, esnerId, router]);
+  }, [user, authLoading, esnerId, router, userRole]);
 
   // Show loading while auth is still loading
   if (authLoading) {

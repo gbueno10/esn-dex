@@ -100,7 +100,7 @@ export default function UnlockPage() {
           </p>
           {unlocking && (
             <p className="text-sm text-muted-foreground">
-              🎉 Preparing your access to {profile?.name}'s profile!
+              🎉 Preparing your access to {profile?.name}&apos;s profile!
             </p>
           )}
         </div>
@@ -136,7 +136,7 @@ export default function UnlockPage() {
       <div className="text-center space-y-4">
         <h2 className="text-2xl font-bold text-green-600">🎉 Profile Unlocked!</h2>
         <p className="text-muted-foreground">
-          You now have access to {profile?.name}'s full profile.
+          You now have access to {profile?.name}&apos;s full profile.
         </p>
         <p className="text-sm text-muted-foreground">
           Redirecting to their profile...

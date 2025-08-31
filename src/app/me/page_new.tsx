@@ -56,7 +56,7 @@ export default function MePage() {
   const [profile, setProfile] = useState<EsnerProfileData | null>(null);
   const [isEditing, setIsEditing] = useState(false);
 
-  // Redirecionar participantes para a homepage
+  // Redirect participants to the homepage
   useEffect(() => {
     if (userRole === 'participant') {
       router.push('/');

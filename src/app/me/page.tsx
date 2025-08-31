@@ -33,7 +33,7 @@ export default function MePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Redirecionar participantes para a homepage
+  // Redirect participants to the homepage
   useEffect(() => {
     if (userRole === 'participant') {
       router.push('/');
@@ -169,7 +169,7 @@ export default function MePage() {
             </div>
             <h2 className="text-2xl font-bold mb-4">Profile not found</h2>
             <p className="text-muted-foreground mb-8">
-              We couldn't load your profile. Please try again.
+              We couldn&apos;t load your profile. Please try again.
             </p>
             <Button onClick={() => window.location.reload()}>
               Try Again
