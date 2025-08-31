@@ -1,5 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
+import { getFirestore, doc, getDoc, updateDoc } from 'firebase/firestore';
+import { initializeApp, getApps } from 'firebase/app';
+
+// Firebase config for client-side fallback
+const firebaseConfig = {
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+};
+
+// Initialize client-side Firebase as fallback
+const clientApp = getApps().length === 0 ? initializeApp(firebaseConfig, 'admin-fallback') : getApps()[0];
+const clientDb = getFirestore(clientApp);
 
 // Helper function to create standardized error responses
 function createErrorResponse(message: string, status: number, code?: string, retryable: boolean = false) {
@@ -45,48 +56,65 @@ export async function GET(
       return createErrorResponse('User ID is required', 400, 'MISSING_USER_ID');
     }
 
-    const userDoc = await adminDb.collection('users').doc(userId).get();
+    // Try admin SDK first, fallback to client SDK
+    try {
+      const userDoc = await adminDb.collection('users').doc(userId).get();
 
-    if (!userDoc.exists) {
-      console.log('User not found in Firestore for ID:', userId);
-      return createErrorResponse(
-        'User profile not found', 
-        404, 
-        'USER_NOT_FOUND'
-      );
-    }
+      if (!userDoc.exists) {
+        return createErrorResponse('User not found', 404, 'USER_NOT_FOUND');
+      }
 
-    const userData = userDoc.data();
+      const userData = userDoc.data();
 
-    if (!userData) {
-      return createErrorResponse(
-        'User data is corrupted', 
-        500, 
-        'CORRUPTED_USER_DATA'
-      );
-    }
-
-    console.log('User found, role:', userData.role, 'visible:', userData.visible);
-
-    // Increment unlock count if requested
-    if (incrementUnlock && userData.role === 'esner') {
-      try {
+      // Handle unlock increment if requested
+      if (incrementUnlock && userData && userData.role === 'esnner') {
+        const currentUnlocks = userData.unlockedCount || 0;
         await adminDb.collection('users').doc(userId).update({
-          unlockedCount: (userData.unlockedCount || 0) + 1,
+          unlockedCount: currentUnlocks + 1,
           updatedAt: new Date()
         });
-        userData.unlockedCount = (userData.unlockedCount || 0) + 1;
-        console.log('Incremented unlock count for user:', userId);
-      } catch (error) {
-        console.error('Failed to increment unlock count:', error);
-        // Don't fail the request if increment fails
+        userData.unlockedCount = currentUnlocks + 1;
+      }
+
+      return NextResponse.json({
+        uid: userDoc.id,
+        ...userData,
+      });
+
+    } catch (adminError) {
+      console.log('Admin SDK failed, using client fallback for GET:', adminError);
+      
+      // Fallback to client SDK
+      try {
+        const userDocRef = doc(clientDb, 'users', userId);
+        const userDocSnap = await getDoc(userDocRef);
+        
+        if (!userDocSnap.exists()) {
+          return createErrorResponse('User not found', 404, 'USER_NOT_FOUND');
+        }
+
+        const userData = userDocSnap.data();
+
+        // Handle unlock increment if requested
+        if (incrementUnlock && userData && userData.role === 'esnner') {
+          const currentUnlocks = userData.unlockedCount || 0;
+          await updateDoc(userDocRef, {
+            unlockedCount: currentUnlocks + 1,
+            updatedAt: new Date()
+          });
+          userData.unlockedCount = currentUnlocks + 1;
+        }
+
+        return NextResponse.json({
+          uid: userDocSnap.id,
+          ...userData,
+        });
+
+      } catch (clientError) {
+        console.error('Both admin and client SDK failed for GET:', clientError);
+        return createErrorResponse('Database access failed', 500, 'DB_ACCESS_ERROR');
       }
     }
-
-    return NextResponse.json({
-      id: userDoc.id,
-      ...userData,
-    });
 
   } catch (error: any) {
     console.error('Get user error:', error);

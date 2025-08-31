@@ -39,38 +39,52 @@ export function AuthGate({ children }: AuthGateProps) {
         setUser(authUser);
 
         // Get or create user document via API
-        try {
-          const response = await fetch(`/api/users?uid=${authUser.uid}`);
-          if (response.ok) {
-            const userData = await response.json();
-            setUserRole(userData.role);
-          } else if (response.status === 404) {
-            // New user - only anonymous participants are created automatically
-            if (authUser.isAnonymous) {
-              const createResponse = await fetch('/api/users', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  uid: authUser.uid,
-                  email: authUser.email,
-                  role: 'participant',
-                }),
-              });
-              
-              if (createResponse.ok) {
-                setUserRole('participant');
+        const fetchUserWithRetry = async (retries = 3): Promise<void> => {
+          try {
+            const response = await fetch(`/api/users?uid=${authUser.uid}`);
+            if (response.ok) {
+              const userData = await response.json();
+              setUserRole(userData.role);
+            } else if (response.status === 404) {
+              // New user - only anonymous participants are created automatically
+              if (authUser.isAnonymous) {
+                const createResponse = await fetch('/api/users', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    uid: authUser.uid,
+                    email: authUser.email,
+                    role: 'participant',
+                  }),
+                });
+                
+                if (createResponse.ok) {
+                  setUserRole('participant');
+                }
+              } else {
+                // For non-anonymous users, retry a few times in case user document is still being created
+                if (retries > 0) {
+                  console.log(`User document not found, retrying... (${retries} attempts left)`);
+                  setTimeout(() => fetchUserWithRetry(retries - 1), 1000);
+                  return;
+                } else {
+                  // ESNers must sign in via /login; they are not auto-created
+                  console.log('ESNer needs to sign in properly');
+                  setUserRole(null);
+                }
               }
-            } else {
-              // ESNers must sign in via /login; they are not auto-created
-              console.log('ESNer needs to sign in properly');
-              setUserRole(null);
+            }
+          } catch (error) {
+            console.error('Error managing user:', error);
+            if (retries > 0) {
+              setTimeout(() => fetchUserWithRetry(retries - 1), 1000);
             }
           }
-        } catch (error) {
-          console.error('Error managing user:', error);
-        }
+        };
+
+        await fetchUserWithRetry();
       } else {
         // No user - do NOT sign in anonymously automatically
         // Users will only be signed in anonymously when they click "Start Playing"

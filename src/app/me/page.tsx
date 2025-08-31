@@ -6,9 +6,11 @@ import { useAuth } from '@/components/AuthGate';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, QrCode } from 'lucide-react';
+import { Loader2, QrCode, LogOut } from 'lucide-react';
 import { generateProfileQRUrl, generateQRCodeImageUrl } from '@/lib/qr-utils';
 import { Profile, ProfileData } from '@/components/Profile';
+import { signOut } from 'firebase/auth';
+import { auth } from '@/lib/firebase-client';
 
 type ProfileForm = {
   name: string;
@@ -33,6 +35,16 @@ export default function MePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      router.push('/login');
+    } catch (error) {
+      console.error('Error signing out:', error);
+      setError('Failed to sign out');
+    }
+  };
+
   // Redirect participants to the homepage
   useEffect(() => {
     if (userRole === 'participant') {
@@ -41,8 +53,33 @@ export default function MePage() {
     }
   }, [userRole, router]);
 
+  // Handle loading state based on auth status
   useEffect(() => {
-    if (!user || userRole !== 'esnner') return;
+    // If we don't have a user yet, keep loading
+    if (!user) return;
+    
+    // If we have a user but role is still being determined, keep loading
+    if (userRole === null) return;
+    
+    // If user is not an esnner, stop loading (they'll be redirected)
+    if (userRole !== 'esnner') {
+      setLoading(false);
+      return;
+    }
+    
+    // If we reach here, we have an esnner user, so we'll load the profile
+    // Loading will be set to false in the loadProfile function
+  }, [user, userRole]);
+
+  useEffect(() => {
+    // Don't try to load profile if we don't have a user yet
+    if (!user) return;
+    
+    // If we have a user but no role yet, wait for role to be determined
+    if (userRole === null) return;
+    
+    // If user is not an esnner, don't load profile
+    if (userRole !== 'esnner') return;
 
     const loadProfile = async () => {
       try {
@@ -208,6 +245,22 @@ export default function MePage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 p-6">
+      {/* Header with Logout Button */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">My Profile</h1>
+          <p className="text-muted-foreground">Manage your ESNer profile and QR code</p>
+        </div>
+        <Button 
+          variant="outline" 
+          onClick={handleLogout}
+          className="flex items-center gap-2"
+        >
+          <LogOut className="h-4 w-4" />
+          Logout
+        </Button>
+      </div>
+
       {/* Success/Error Messages */}
       {success && (
         <Alert>

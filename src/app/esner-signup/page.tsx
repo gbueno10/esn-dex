@@ -14,6 +14,7 @@ export default function EsnerSignupPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
@@ -21,8 +22,11 @@ export default function EsnerSignupPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setSuccess(false);
 
     try {
+      console.log('Starting signup process for:', email);
+      
       // Prefer server-side creation via admin API
       const response = await fetch('/api/auth', {
         method: 'POST',
@@ -31,36 +35,68 @@ export default function EsnerSignupPage() {
       });
 
       const data = await response.json().catch(() => ({}));
+      console.log('API /auth response:', { status: response.status, data });
 
-      if (response.ok) {
+      if (response.ok && !data?.useClientAuth) {
         // Created by admin SDK
+        console.log('User created successfully via admin SDK');
         router.push('/me');
         return;
       }
 
       // If API indicates we should use client-side auth, fall back
-      if (data?.useClientAuth) {
-        const { createUserWithEmailAndPassword } = await import('firebase/auth');
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      if (response.ok && data?.useClientAuth) {
+        console.log('Falling back to client-side auth');
+        try {
+          const { createUserWithEmailAndPassword } = await import('firebase/auth');
+          console.log('Creating user with Firebase Auth...');
+          const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+          console.log('Firebase Auth response:', userCredential);
 
-        if (userCredential?.user) {
-          try {
-            await fetch('/api/users', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ uid: userCredential.user.uid, email: userCredential.user.email, role: 'esnner' }),
-            });
-          } catch (apiError: any) {
-            console.warn('Failed to create user in Firestore after client create:', apiError);
+          if (userCredential?.user) {
+            console.log('User created via client SDK:', userCredential.user.uid);
+            console.log('User email:', userCredential.user.email);
+            
+            try {
+              console.log('Creating user document in Firestore...');
+              const userResponse = await fetch('/api/users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                  uid: userCredential.user.uid, 
+                  email: userCredential.user.email, 
+                  role: 'esnner' 
+                }),
+              });
+              
+              const userData = await userResponse.json().catch(() => ({}));
+              console.log('User document creation response:', { status: userResponse.status, data: userData });
+              
+              if (!userResponse.ok) {
+                console.warn('Failed to create user document, but auth user was created');
+                console.warn('Response data:', userData);
+              } else {
+                console.log('User document created successfully!');
+              }
+            } catch (apiError: any) {
+              console.error('Failed to create user in Firestore after client create:', apiError);
+            }
+
+            console.log('Redirecting to /me');
+            setSuccess(true);
+            // Add longer delay to ensure user document is created and auth state is updated
+            setTimeout(() => {
+              router.push('/me');
+            }, 2000);
+          } else {
+            throw new Error('Failed to create user with client SDK - no user returned');
           }
-
-          router.push('/me');
-          return;
+        } catch (authError: any) {
+          console.error('Firebase Auth error:', authError);
+          throw authError;
         }
-      }
-
-      // If API returned an error, show it
-      if (!response.ok) {
+      } else {
+        // If API returned an error, show it
         throw new Error(data?.error || 'Failed to create account');
       }
 
@@ -102,6 +138,12 @@ export default function EsnerSignupPage() {
               </Alert>
             )}
 
+            {success && (
+              <Alert>
+                <AlertDescription>Account created successfully! Redirecting to your profile...</AlertDescription>
+              </Alert>
+            )}
+
             <form onSubmit={handleSignup} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
@@ -128,8 +170,8 @@ export default function EsnerSignupPage() {
                 />
               </div>
 
-              <Button type="submit" disabled={loading || !email || !password} className="w-full">
-                {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Create ESNer account'}
+              <Button type="submit" disabled={loading || success || !email || !password} className="w-full">
+                {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : success ? 'Redirecting...' : 'Create ESNer account'}
               </Button>
             </form>
 

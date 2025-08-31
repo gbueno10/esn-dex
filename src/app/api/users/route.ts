@@ -1,5 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
+import { getFirestore, doc, getDoc, setDoc, collection, getDocs } from 'firebase/firestore';
+import { initializeApp, getApps } from 'firebase/app';
+
+// Firebase config for client-side fallback
+const firebaseConfig = {
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  // Add other config if needed
+};
+
+// Initialize client-side Firebase as fallback
+const clientApp = getApps().length === 0 ? initializeApp(firebaseConfig, 'admin-fallback') : getApps()[0];
+const clientDb = getFirestore(clientApp);
 
 // Helper function to create standardized error responses
 function createErrorResponse(message: string, status: number, code?: string) {
@@ -36,17 +48,39 @@ export async function GET(request: NextRequest) {
     const uid = searchParams.get('uid');
 
     if (uid) {
-      // Get specific user
-      const userDoc = await adminDb.collection('users').doc(uid).get();
+      // Try admin SDK first, fallback to client SDK
+      try {
+        const userDoc = await adminDb.collection('users').doc(uid).get();
+        
+        if (!userDoc.exists) {
+          return createErrorResponse('User not found', 404, 'USER_NOT_FOUND');
+        }
 
-      if (!userDoc.exists) {
-        return createErrorResponse('User not found', 404, 'USER_NOT_FOUND');
+        return NextResponse.json({
+          uid: userDoc.id,
+          ...userDoc.data(),
+        });
+      } catch (adminError) {
+        console.log('Admin SDK failed, using client fallback:', adminError);
+        
+        // Fallback to client SDK
+        try {
+          const userDocRef = doc(clientDb, 'users', uid);
+          const userDocSnap = await getDoc(userDocRef);
+          
+          if (!userDocSnap.exists()) {
+            return createErrorResponse('User not found', 404, 'USER_NOT_FOUND');
+          }
+
+          return NextResponse.json({
+            uid: userDocSnap.id,
+            ...userDocSnap.data(),
+          });
+        } catch (clientError) {
+          console.error('Both admin and client SDK failed:', clientError);
+          return createErrorResponse('Database access failed', 500, 'DB_ACCESS_ERROR');
+        }
       }
-
-      return NextResponse.json({
-        uid: userDoc.id,
-        ...userDoc.data(),
-      });
     } else {
       // Get all users (admin only)
       const decodedToken = await verifyAuthToken(request);
@@ -85,59 +119,96 @@ export async function GET(request: NextRequest) {
   }
 }
 
-/**
- * POST /api/users - Create new user document (initial setup only)
- * For updates, use PATCH /api/users/[id]
- */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     console.log('API /users POST received:', body);
 
-    const { uid, email, name, role = 'participant' } = body;
+    const { uid, email, role = 'participant' } = body;
 
     if (!uid) {
       return createErrorResponse('User ID is required', 400, 'MISSING_UID');
     }
 
-    // For anonymous users (participants), email and name are not required
-    if (role !== 'participant' && (!email || !name)) {
-      return createErrorResponse('Email and name are required for non-participant users', 400, 'MISSING_REQUIRED_FIELDS');
+    // Try admin SDK first, fallback to client SDK
+    try {
+      // Check if user already exists
+      const existingUser = await adminDb.collection('users').doc(uid).get();
+      
+      if (existingUser.exists) {
+        return createErrorResponse(
+          'User already exists. Use PATCH /api/users/[id] to update.',
+          409,
+          'USER_EXISTS'
+        );
+      }
+
+      // Create new user document
+      const newUserData = {
+        email: email || null,
+        role,
+        visible: role === 'participant' ? false : true, // Anonymous users are not visible by default
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      await adminDb.collection('users').doc(uid).set(newUserData);
+
+      console.log('User created successfully with Admin SDK:', uid);
+
+      return NextResponse.json({
+        success: true,
+        user: {
+          uid,
+          ...newUserData
+        },
+        message: 'User created successfully'
+      }, { status: 201 });
+
+    } catch (adminError) {
+      console.log('Admin SDK failed, using client fallback for POST:', adminError);
+      
+      // Fallback to client SDK
+      try {
+        // Check if user already exists
+        const userDocRef = doc(clientDb, 'users', uid);
+        const existingUser = await getDoc(userDocRef);
+        
+        if (existingUser.exists()) {
+          return createErrorResponse(
+            'User already exists. Use PATCH /api/users/[id] to update.',
+            409,
+            'USER_EXISTS'
+          );
+        }
+
+        // Create new user document
+        const newUserData = {
+          email: email || null,
+          role,
+          visible: role === 'participant' ? false : true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+
+        await setDoc(userDocRef, newUserData);
+
+        console.log('User created successfully with Client SDK:', uid);
+
+        return NextResponse.json({
+          success: true,
+          user: {
+            uid,
+            ...newUserData
+          },
+          message: 'User created successfully'
+        }, { status: 201 });
+
+      } catch (clientError) {
+        console.error('Both admin and client SDK failed for POST:', clientError);
+        return createErrorResponse('Failed to create user', 500, 'CREATE_USER_ERROR');
+      }
     }
-
-    // Check if user already exists
-    const existingUser = await adminDb.collection('users').doc(uid).get();
-    
-    if (existingUser.exists) {
-      return createErrorResponse(
-        'User already exists. Use PATCH /api/users/[id] to update.',
-        409,
-        'USER_EXISTS'
-      );
-    }
-
-    // Create new user document
-    const newUserData = {
-      email: email || null,
-      name: name || (role === 'participant' ? `Anonymous User` : undefined),
-      role,
-      visible: role === 'participant' ? false : true, // Anonymous users are not visible by default
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-
-    await adminDb.collection('users').doc(uid).set(newUserData);
-
-    console.log('User created successfully:', uid);
-
-    return NextResponse.json({
-      success: true,
-      user: {
-        uid,
-        ...newUserData
-      },
-      message: 'User created successfully'
-    }, { status: 201 });
 
   } catch (error: any) {
     console.error('Create user error:', error);
