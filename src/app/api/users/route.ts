@@ -1,6 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
 
+// Helper function to create standardized error responses
+function createErrorResponse(message: string, status: number, code?: string) {
+  return NextResponse.json(
+    { 
+      error: message, 
+      code: code || `ERROR_${status}`,
+      timestamp: new Date().toISOString()
+    },
+    { status }
+  );
+}
+
+// Helper function to verify auth token
+async function verifyAuthToken(request: NextRequest) {
+  const authHeader = request.headers.get('authorization');
+  
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return null;
+  }
+  
+  try {
+    const token = authHeader.substring(7);
+    return await adminAuth.verifyIdToken(token);
+  } catch (error) {
+    console.error('Token verification failed:', error);
+    return null;
+  }
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -11,10 +40,7 @@ export async function GET(request: NextRequest) {
       const userDoc = await adminDb.collection('users').doc(uid).get();
 
       if (!userDoc.exists) {
-        return NextResponse.json(
-          { error: 'User not found' },
-          { status: 404 }
-        );
+        return createErrorResponse('User not found', 404, 'USER_NOT_FOUND');
       }
 
       return NextResponse.json({
@@ -22,56 +48,112 @@ export async function GET(request: NextRequest) {
         ...userDoc.data(),
       });
     } else {
-      // Get all users
+      // Get all users (admin only)
+      const decodedToken = await verifyAuthToken(request);
+      
+      if (!decodedToken) {
+        return createErrorResponse('Authentication required', 401, 'AUTH_REQUIRED');
+      }
+
+      // Check if user has admin role
+      const userDoc = await adminDb.collection('users').doc(decodedToken.uid).get();
+      const userData = userDoc.data();
+      
+      if (userData?.role !== 'admin') {
+        return createErrorResponse('Admin access required', 403, 'ADMIN_REQUIRED');
+      }
+
       const usersSnapshot = await adminDb.collection('users').get();
       const users = usersSnapshot.docs.map(doc => ({
         uid: doc.id,
         ...doc.data(),
       }));
 
-      return NextResponse.json(users);
+      return NextResponse.json({
+        users,
+        total: users.length,
+        timestamp: new Date().toISOString()
+      });
     }
   } catch (error: any) {
     console.error('Get users error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch users' },
-      { status: 500 }
+    return createErrorResponse(
+      'Failed to fetch users. Please try again later.',
+      500,
+      'FETCH_USERS_ERROR'
     );
   }
 }
 
+/**
+ * POST /api/users - Create new user document (initial setup only)
+ * For updates, use PATCH /api/users/[id]
+ */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    console.log('API /users received:', body);
+    console.log('API /users POST received:', body);
 
-    const { uid, role, ...userData } = body;
+    const { uid, email, name, role = 'participant' } = body;
 
     if (!uid) {
-      console.error('No UID provided');
-      return NextResponse.json(
-        { error: 'User ID is required' },
-        { status: 400 }
+      return createErrorResponse('User ID is required', 400, 'MISSING_UID');
+    }
+
+    if (!email || !name) {
+      return createErrorResponse('Email and name are required', 400, 'MISSING_REQUIRED_FIELDS');
+    }
+
+    // Check if user already exists
+    const existingUser = await adminDb.collection('users').doc(uid).get();
+    
+    if (existingUser.exists) {
+      return createErrorResponse(
+        'User already exists. Use PATCH /api/users/[id] to update.',
+        409,
+        'USER_EXISTS'
       );
     }
 
-    console.log('Updating user:', uid, 'with data:', userData);
-
-    const userRef = adminDb.collection('users').doc(uid);
-    await userRef.set({
-      ...userData,
-      role: role || 'participant',
+    // Create new user document
+    const newUserData = {
+      email,
+      name,
+      role,
+      visible: true,
+      createdAt: new Date(),
       updatedAt: new Date(),
-    }, { merge: true });
+    };
 
-    console.log('User updated successfully');
+    await adminDb.collection('users').doc(uid).set(newUserData);
 
-    return NextResponse.json({ success: true });
+    console.log('User created successfully:', uid);
+
+    return NextResponse.json({
+      success: true,
+      user: {
+        uid,
+        ...newUserData
+      },
+      message: 'User created successfully'
+    }, { status: 201 });
+
   } catch (error: any) {
-    console.error('Update user error:', error);
-    return NextResponse.json(
-      { error: 'Failed to update user', details: error.message },
-      { status: 500 }
+    console.error('Create user error:', error);
+    
+    // Provide more specific error messages
+    if (error.code === 'permission-denied') {
+      return createErrorResponse(
+        'Permission denied. Please check your authentication.',
+        403,
+        'PERMISSION_DENIED'
+      );
+    }
+    
+    return createErrorResponse(
+      'Failed to create user. Please try again later.',
+      500,
+      'CREATE_USER_ERROR'
     );
   }
 }

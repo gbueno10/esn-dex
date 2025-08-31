@@ -89,8 +89,6 @@ export default function MePage() {
 
     try {
       const profileData = {
-        uid: user.uid,
-        role: 'esnner',
         name: data.name,
         photoURL: data.photoURL || '',
         bio: data.bio || '',
@@ -105,17 +103,45 @@ export default function MePage() {
         visible: data.visible
       };
 
-      const response = await fetch('/api/users', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(profileData),
-      });
+      // Check if user exists first
+      const checkResponse = await fetch(`/api/users?uid=${user.uid}`);
+      
+      if (checkResponse.ok) {
+        // User exists, update profile
+        const response = await fetch(`/api/users/${user.uid}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${await user.getIdToken()}`
+          },
+          body: JSON.stringify(profileData),
+        });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to save profile: ${response.status} ${errorText}`);
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Failed to save profile: ${response.status} ${errorText}`);
+        }
+      } else {
+        // User doesn't exist, create new profile
+        const createData = {
+          uid: user.uid,
+          email: user.email || '', // Include email for creation
+          role: 'esnner',
+          ...profileData
+        };
+
+        const response = await fetch('/api/users', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(createData),
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Failed to save profile: ${response.status} ${errorText}`);
+        }
       }
 
       // Update local profile state

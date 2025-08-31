@@ -9,6 +9,7 @@ export interface EsnerProfile {
   photoURL?: string;
   bio?: string;
   location?: string;
+  nationality?: string;
   starters?: string[];
   interests?: string[];
   socials?: {
@@ -17,8 +18,8 @@ export interface EsnerProfile {
   };
   visible?: boolean;
   role?: string;
-  createdAt: any;
-  updatedAt: any;
+  createdAt: string | null; // Changed to string for serialization
+  updatedAt: string | null; // Changed to string for serialization
   unlockedCount?: number;
 }
 
@@ -30,7 +31,7 @@ export async function getFeaturedEsners(limit: number = 3): Promise<EsnerProfile
     // Query for featured ESNers - simplified to avoid index requirements
     const querySnapshot = await adminDb
       .collection('users')
-      .where('role', '==', 'esner')
+      .where('role', '==', 'esnner')
       .where('visible', '==', true)
       .limit(20) // Get more to filter client-side
       .get();
@@ -47,6 +48,7 @@ export async function getFeaturedEsners(limit: number = 3): Promise<EsnerProfile
         photoURL: data.photoURL || data.photo || null,
         bio: data.bio || data.description || '',
         location: data.location || data.city || '',
+        nationality: data.nationality || data.country || '',
         starters: data.starters || [],
         interests: data.interests || data.tags || [],
         socials: {
@@ -54,9 +56,10 @@ export async function getFeaturedEsners(limit: number = 3): Promise<EsnerProfile
           linkedin: data.linkedinUrl || data.socials?.linkedin || '',
         },
         visible: data.visible !== false,
-        role: data.role || 'esner',
-        createdAt: data.createdAt || null,
-        updatedAt: data.updatedAt || null,
+        role: data.role || 'esnner',
+        // Convert Firestore Timestamps to plain objects for serialization
+        createdAt: data.createdAt ? (data.createdAt.toDate ? data.createdAt.toDate().toISOString() : data.createdAt) : null,
+        updatedAt: data.updatedAt ? (data.updatedAt.toDate ? data.updatedAt.toDate().toISOString() : data.updatedAt) : null,
         unlockedCount: data.unlockedCount || 0,
       });
     });
@@ -76,15 +79,53 @@ export async function getFeaturedEsners(limit: number = 3): Promise<EsnerProfile
  */
 export async function getAllEsners(): Promise<EsnerProfile[]> {
   try {
-    const querySnapshot = await adminDb
+    console.log('🔍 getAllEsners: Starting query...');
+    
+    // First, let's try a broader query to see what we have
+    const allUsersSnapshot = await adminDb.collection('users').limit(5).get();
+    console.log('📋 Total users in collection:', allUsersSnapshot.size);
+    
+    allUsersSnapshot.forEach((doc: any) => {
+      const data = doc.data();
+      console.log(`� User ${doc.id}:`, {
+        role: data.role,
+        roleType: typeof data.role,
+        visible: data.visible,
+        visibleType: typeof data.visible,
+        name: data.name
+      });
+    });
+
+    // Try different query approaches
+    console.log('🔍 Trying role query...');
+    const roleQuery = await adminDb
       .collection('users')
-      .where('role', '==', 'esner')
+      .where('role', '==', 'esnner')
+      .get();
+    console.log('📊 Users with role=esnner:', roleQuery.size);
+
+    console.log('🔍 Trying visible query...');  
+    const visibleQuery = await adminDb
+      .collection('users')
       .where('visible', '==', true)
       .get();
+    console.log('� Users with visible=true:', visibleQuery.size);
+
+    const querySnapshot = await adminDb
+      .collection('users')
+      .where('role', '==', 'esnner')
+      .where('visible', '==', true)
+      .get();
+
+    console.log(`� getAllEsners: Found ${querySnapshot.size} ESNers`);
 
     const esners: EsnerProfile[] = [];
     querySnapshot.forEach((doc: any) => {
       const data = doc.data();
+      
+      // Debug bio specifically
+      console.log(`👤 ${data.name}: bio="${data.bio}", hasBio=${!!data.bio}`);
+      
       esners.push({
         id: doc.id,
         uid: doc.id,
@@ -94,6 +135,7 @@ export async function getAllEsners(): Promise<EsnerProfile[]> {
         photoURL: data.photoURL || data.photo || null,
         bio: data.bio || data.description || '',
         location: data.location || data.city || '',
+        nationality: data.nationality || data.country || '',
         starters: data.starters || [],
         interests: data.interests || data.tags || [],
         socials: {
@@ -101,16 +143,18 @@ export async function getAllEsners(): Promise<EsnerProfile[]> {
           linkedin: data.linkedinUrl || data.socials?.linkedin || '',
         },
         visible: data.visible !== false,
-        role: data.role || 'esner',
-        createdAt: data.createdAt || null,
-        updatedAt: data.updatedAt || null,
+        role: data.role || 'esnner',
+        // Convert Firestore Timestamps to plain objects for serialization
+        createdAt: data.createdAt ? (data.createdAt.toDate ? data.createdAt.toDate().toISOString() : data.createdAt) : null,
+        updatedAt: data.updatedAt ? (data.updatedAt.toDate ? data.updatedAt.toDate().toISOString() : data.updatedAt) : null,
         unlockedCount: data.unlockedCount || 0,
       });
     });
 
+    console.log(`🎯 getAllEsners: Returning ${esners.length} ESNers`);
     return esners;
   } catch (error) {
-    console.error('Error fetching all esners:', error);
+    console.error('❌ Error fetching all esners:', error);
     return [];
   }
 }
@@ -131,7 +175,7 @@ export async function getEsnerById(id: string): Promise<EsnerProfile | null> {
 
     const data = doc.data();
     
-    if (!data || data.role !== 'esner' || data.visible === false) {
+    if (!data || data.role !== 'esnner' || data.visible === false) {
       return null;
     }
 
@@ -144,6 +188,7 @@ export async function getEsnerById(id: string): Promise<EsnerProfile | null> {
       photoURL: data.photoURL || data.photo || null,
       bio: data.bio || data.description || '',
       location: data.location || data.city || '',
+      nationality: data.nationality || data.country || '',
       starters: data.starters || [],
       interests: data.interests || data.tags || [],
       socials: {
@@ -151,9 +196,10 @@ export async function getEsnerById(id: string): Promise<EsnerProfile | null> {
         linkedin: data.linkedinUrl || data.socials?.linkedin || '',
       },
       visible: data.visible !== false,
-      role: data.role || 'esner',
-      createdAt: data.createdAt || null,
-      updatedAt: data.updatedAt || null,
+      role: data.role || 'esnner',
+      // Convert Firestore Timestamps to plain objects for serialization
+      createdAt: data.createdAt ? (data.createdAt.toDate ? data.createdAt.toDate().toISOString() : data.createdAt) : null,
+      updatedAt: data.updatedAt ? (data.updatedAt.toDate ? data.updatedAt.toDate().toISOString() : data.updatedAt) : null,
       unlockedCount: data.unlockedCount || 0,
     };
   } catch (error) {

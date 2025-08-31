@@ -16,6 +16,8 @@ interface Profile {
   email?: string;
   userId: string;
   photoURL?: string;
+  bio?: string;
+  nationality?: string;
   starters?: string[];
   interests?: string[];
   visible?: boolean;
@@ -36,11 +38,13 @@ export function EsnersPageClient({ esners, userRole }: EsnersPageClientProps) {
     email: esner.email,
     userId: esner.userId,
     photoURL: esner.photoURL,
+    bio: esner.bio,
+    nationality: esner.nationality,
     starters: esner.starters,
     interests: esner.interests,
     visible: esner.visible,
     role: esner.role,
-    isUnlocked: false, // This would need to be determined based on user's unlocks
+    isUnlocked: isEsner, // Only ESNers can see all profiles unlocked by default
     createdAt: esner.createdAt,
     updatedAt: esner.updatedAt,
   }));

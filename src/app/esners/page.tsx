@@ -1,14 +1,9 @@
 import { getAllEsners } from '@/lib/server-data';
-import { EsnersPageClient } from '@/components/EsnersPageClient';
+import { EsnersPageWrapper } from '@/components/EsnersPageWrapper';
 
 export default async function EsnersPage() {
   // Server-side data fetching
   const esners = await getAllEsners();
 
-  return (
-    <EsnersPageClient 
-      esners={esners}
-      userRole="participant" // TODO: Get user role from auth context
-    />
-  );
+  return <EsnersPageWrapper esners={esners} />;
 }

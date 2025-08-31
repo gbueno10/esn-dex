@@ -1,23 +1,15 @@
 'use client';
 
-import { UserProfileCard } from '@/components/UserProfileCard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Users, QrCode, Heart } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { EsnerProfile } from '@/lib/server-data';
 
 interface HomePageClientProps {
-  featuredEsners: EsnerProfile[];
+  featuredEsners: any[]; // Keep for compatibility but won't be used
 }
 
 export function HomePageClient({ featuredEsners }: HomePageClientProps) {
-  const router = useRouter();
-
-  const handleProfileClick = (esner: EsnerProfile) => {
-    router.push(`/unlock/${esner.userId}`);
-  };
 
   return (
     <div className="space-y-8">
@@ -73,40 +65,6 @@ export function HomePageClient({ featuredEsners }: HomePageClientProps) {
           </div>
         </CardContent>
       </Card>
-
-      {/* Featured ESNers */}
-      {featuredEsners.length > 0 && (
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold text-foreground">Featured ESNers</h2>
-              <p className="text-muted-foreground">Get to know some of our amazing volunteers</p>
-            </div>
-            <Button asChild variant="outline">
-              <Link href="/esners">
-                View All <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredEsners.map((esner) => (
-              <div 
-                key={esner.id}
-                onClick={() => handleProfileClick(esner)}
-                className="cursor-pointer"
-              >
-                <UserProfileCard
-                  profile={esner}
-                  variant="compact"
-                  showShareButton={false}
-                  showStatsCard={false}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Call to Action */}
       <Card className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 border-0">

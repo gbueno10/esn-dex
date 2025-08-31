@@ -39,13 +39,17 @@ export function EsnerCard({ esner, id }: EsnerCardProps) {
   const isUnlocked = userRole === 'esnner' || esner.isUnlocked || false;
   const isEsner = esner.role === 'esnner';
   const isParticipant = esner.role === 'participant';
+  const isViewerEsner = userRole === 'esnner';
 
-  // For participants, show a generic message since they don't have starters
+  // For participants, show a generic message since they don't have bio
   const displayText = isEsner
-    ? (esner.bio || esner.starters?.[0] || 'Say hi!')
+    ? (esner.bio || 'Say hi!')
     : 'Erasmus Participant';
 
   const profileImage = imageError ? null : esner.photoURL;
+  
+  // Privacy logic: Non-ESNers see limited info
+  const displayNationality = isViewerEsner ? (esner.nationality || 'Unknown') : '??????';
 
   return (
     <Link href={`/esners/${id}`}>
@@ -53,7 +57,7 @@ export function EsnerCard({ esner, id }: EsnerCardProps) {
         <CardContent className="p-0">
           {/* Profile Image Section */}
           <div className="relative h-48 flex items-center justify-center">
-            <Avatar className={`w-32 h-32 transition-all duration-200 group-hover:scale-105 ${!isUnlocked && isEsner && userRole !== 'esnner' ? 'blur-sm brightness-75' : ''}`}>
+            <Avatar className={`w-32 h-32 transition-all duration-200 group-hover:scale-105 ${!isUnlocked && isEsner ? 'blur-sm brightness-75' : ''}`}>
               <AvatarImage
                 src={profileImage || undefined}
                 alt={esner.name}
@@ -84,12 +88,12 @@ export function EsnerCard({ esner, id }: EsnerCardProps) {
 
             {/* Lock/Unlock indicator */}
             <div className="absolute bottom-3 left-3">
-              {!isUnlocked && isEsner && userRole !== 'esnner' ? (
+              {!isUnlocked && isEsner ? (
                 <Badge variant="secondary" className="text-xs">
                   <Lock className="w-3 h-3 mr-1" />
                   Locked
                 </Badge>
-              ) : isEsner ? (
+              ) : isEsner && isUnlocked ? (
                 <Badge variant="outline" className="text-xs">
                   <Lock className="w-3 h-3 mr-1" />
                   Unlocked
@@ -113,16 +117,16 @@ export function EsnerCard({ esner, id }: EsnerCardProps) {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-foreground">
                 <Globe className="w-4 h-4" />
-                <span className="text-sm">?????</span>
+                <span className="text-sm">{displayNationality}</span>
               </div>
 
               <div className="text-xs">
-                {isEsner && !(isUnlocked || userRole === 'esnner') && (
+                {isEsner && !isUnlocked && (
                   <Badge variant="outline" className="text-xs">
                     Unlock
                   </Badge>
                 )}
-                {isEsner && (isUnlocked || userRole === 'esnner') && (
+                {isEsner && isUnlocked && (
                   <Badge variant="outline" className="text-xs">
                     Open
                   </Badge>

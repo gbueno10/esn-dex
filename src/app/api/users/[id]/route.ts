@@ -1,6 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
 
+// Helper function to create standardized error responses
+function createErrorResponse(message: string, status: number, code?: string, retryable: boolean = false) {
+  return NextResponse.json(
+    { 
+      error: message, 
+      code: code || `ERROR_${status}`,
+      retryable,
+      timestamp: new Date().toISOString()
+    },
+    { status }
+  );
+}
+
 // Helper function to verify token from header
 async function verifyAuthToken(authHeader: string | null) {
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -29,89 +42,150 @@ export async function GET(
     console.log('Fetching user profile for ID:', userId);
 
     if (!userId) {
-      return NextResponse.json(
-        { error: 'User ID is required' },
-        { status: 400 }
-      );
+      return createErrorResponse('User ID is required', 400, 'MISSING_USER_ID');
     }
 
     const userDoc = await adminDb.collection('users').doc(userId).get();
 
-    console.log('User document exists:', userDoc.exists);
-
     if (!userDoc.exists) {
       console.log('User not found in Firestore for ID:', userId);
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
+      return createErrorResponse(
+        'User profile not found', 
+        404, 
+        'USER_NOT_FOUND'
       );
     }
 
     const userData = userDoc.data();
 
-    // Only increment unlock count if specifically requested
-    if (incrementUnlock) {
-      const currentCount = userData?.unlockedCount || 0;
-      await adminDb.collection('users').doc(userId).update({
-        unlockedCount: currentCount + 1,
-        lastUnlockedAt: new Date()
-      });
-      
-      return NextResponse.json({
-        id: userDoc.id,
-        ...userData,
-        unlockedCount: currentCount + 1
-      });
+    if (!userData) {
+      return createErrorResponse(
+        'User data is corrupted', 
+        500, 
+        'CORRUPTED_USER_DATA'
+      );
+    }
+
+    console.log('User found, role:', userData.role, 'visible:', userData.visible);
+
+    // Increment unlock count if requested
+    if (incrementUnlock && userData.role === 'esner') {
+      try {
+        await adminDb.collection('users').doc(userId).update({
+          unlockedCount: (userData.unlockedCount || 0) + 1,
+          updatedAt: new Date()
+        });
+        userData.unlockedCount = (userData.unlockedCount || 0) + 1;
+        console.log('Incremented unlock count for user:', userId);
+      } catch (error) {
+        console.error('Failed to increment unlock count:', error);
+        // Don't fail the request if increment fails
+      }
     }
 
     return NextResponse.json({
       id: userDoc.id,
       ...userData,
     });
+
   } catch (error: any) {
-    console.error('Get user by ID error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch user' },
-      { status: 500 }
+    console.error('Get user error:', error);
+    
+    if (error.code === 'permission-denied') {
+      return createErrorResponse(
+        'You do not have permission to access this user profile',
+        403,
+        'PERMISSION_DENIED'
+      );
+    }
+    
+    return createErrorResponse(
+      'Failed to load user profile. Please try again.',
+      500,
+      'FETCH_USER_ERROR',
+      true
     );
   }
 }
 
+/**
+ * PATCH /api/users/[id] - Update existing user profile
+ * Recommended method for profile updates
+ */
 export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
+    const userId = params.id;
     const authHeader = request.headers.get('authorization');
-    const user = await verifyAuthToken(authHeader);
-    
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const updateData = await request.json();
+
+    console.log('PATCH user profile for ID:', userId);
+
+    if (!userId) {
+      return createErrorResponse('User ID is required', 400, 'MISSING_USER_ID');
     }
 
-    const userId = params.id;
-    const updateData = await request.json();
-    
-    // Verify user can only update their own profile
-    if (user.uid !== userId) {
-      return NextResponse.json(
-        { error: 'You can only update your own profile' },
-        { status: 403 }
+    // Verify authentication
+    const decodedToken = await verifyAuthToken(authHeader);
+    if (!decodedToken) {
+      return createErrorResponse(
+        'Authentication required to update profile',
+        401,
+        'AUTH_REQUIRED'
       );
     }
 
-    // Remove any sensitive fields that shouldn't be updated via this endpoint
-    const allowedFields = [
-      'name', 'photoURL', 'starters', 'interests', 'bio', 
-      'socials', 'visible', 'updatedAt'
-    ];
+    // Check if user is updating their own profile or is admin
+    const isOwnProfile = decodedToken.uid === userId;
+    let isAdmin = false;
+
+    if (!isOwnProfile) {
+      const adminDoc = await adminDb.collection('users').doc(decodedToken.uid).get();
+      const adminData = adminDoc.data();
+      isAdmin = adminData?.role === 'admin';
+    }
+
+    if (!isOwnProfile && !isAdmin) {
+      return createErrorResponse(
+        'You can only update your own profile',
+        403,
+        'FORBIDDEN'
+      );
+    }
+
+    // Check if user exists
+    const userDoc = await adminDb.collection('users').doc(userId).get();
+    if (!userDoc.exists) {
+      return createErrorResponse(
+        'User not found',
+        404,
+        'USER_NOT_FOUND'
+      );
+    }
+
+    // Define allowed fields based on user type
+    const allowedFields = isAdmin 
+      ? ['name', 'photoURL', 'starters', 'interests', 'bio', 'socials', 'visible', 'role', 'unlockedCount']
+      : ['name', 'photoURL', 'starters', 'interests', 'bio', 'socials', 'visible'];
     
+    // Filter and validate update data
     const filteredData = Object.keys(updateData)
       .filter(key => allowedFields.includes(key))
       .reduce((obj: any, key) => {
         obj[key] = updateData[key];
         return obj;
       }, {});
+
+    // Validate required fields if they're being updated
+    if (filteredData.name !== undefined && (!filteredData.name || filteredData.name.trim() === '')) {
+      return createErrorResponse(
+        'Name cannot be empty',
+        400,
+        'INVALID_NAME'
+      );
+    }
 
     // Add timestamp
     filteredData.updatedAt = new Date();
@@ -122,15 +196,42 @@ export async function PATCH(
 
     // Return updated user data
     const updatedDoc = await userRef.get();
+    
+    console.log('User profile updated successfully:', userId);
+    
     return NextResponse.json({
-      id: updatedDoc.id,
-      ...updatedDoc.data(),
+      success: true,
+      user: {
+        id: updatedDoc.id,
+        ...updatedDoc.data(),
+      },
+      message: 'Profile updated successfully'
     });
+
   } catch (error: any) {
     console.error('Update user error:', error);
-    return NextResponse.json(
-      { error: 'Failed to update user' },
-      { status: 500 }
+    
+    if (error.code === 'permission-denied') {
+      return createErrorResponse(
+        'Permission denied. Please check your authentication.',
+        403,
+        'PERMISSION_DENIED'
+      );
+    }
+    
+    if (error.code === 'not-found') {
+      return createErrorResponse(
+        'User not found',
+        404,
+        'USER_NOT_FOUND'
+      );
+    }
+    
+    return createErrorResponse(
+      'Failed to update profile. Please try again.',
+      500,
+      'UPDATE_USER_ERROR',
+      true
     );
   }
 }
