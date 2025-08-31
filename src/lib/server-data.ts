@@ -79,52 +79,19 @@ export async function getFeaturedEsners(limit: number = 3): Promise<EsnerProfile
  */
 export async function getAllEsners(): Promise<EsnerProfile[]> {
   try {
-    // Simple query without debug logs
+    console.log('� Fetching all ESNers from database...');
     
-    // First, let's try a broader query to see what we have
-    const allUsersSnapshot = await adminDb.collection('users').limit(5).get();
-    console.log('📋 Total users in collection:', allUsersSnapshot.size);
-    
-    allUsersSnapshot.forEach((doc: any) => {
-      const data = doc.data();
-      console.log(`� User ${doc.id}:`, {
-        role: data.role,
-        roleType: typeof data.role,
-        visible: data.visible,
-        visibleType: typeof data.visible,
-        name: data.name
-      });
-    });
-
-    // Try different query approaches
-    console.log('🔍 Trying role query...');
-    const roleQuery = await adminDb
-      .collection('users')
-      .where('role', '==', 'esnner')
-      .get();
-    console.log('📊 Users with role=esnner:', roleQuery.size);
-
-    console.log('🔍 Trying visible query...');  
-    const visibleQuery = await adminDb
-      .collection('users')
-      .where('visible', '==', true)
-      .get();
-    console.log('� Users with visible=true:', visibleQuery.size);
-
     const querySnapshot = await adminDb
       .collection('users')
       .where('role', '==', 'esnner')
       .where('visible', '==', true)
       .get();
 
-    console.log(`� getAllEsners: Found ${querySnapshot.size} ESNers`);
+    console.log(`📊 Found ${querySnapshot.size} visible ESNers in database`);
 
     const esners: EsnerProfile[] = [];
     querySnapshot.forEach((doc: any) => {
       const data = doc.data();
-      
-      // Debug bio specifically
-      console.log(`👤 ${data.name}: bio="${data.bio}", hasBio=${!!data.bio}`);
       
       esners.push({
         id: doc.id,
@@ -140,7 +107,7 @@ export async function getAllEsners(): Promise<EsnerProfile[]> {
         interests: data.interests || data.tags || [],
         socials: {
           instagram: data.instagramUrl || data.socials?.instagram || '',
-          linkedin: data.linkedinUrl || data.socials?.linkedin || '',
+          linkedin: data.linkedinUrl || data.socials?.linkedin || ''
         },
         visible: data.visible !== false,
         role: data.role || 'esnner',
@@ -151,7 +118,7 @@ export async function getAllEsners(): Promise<EsnerProfile[]> {
       });
     });
 
-    console.log(`🎯 getAllEsners: Returning ${esners.length} ESNers`);
+    console.log(`✅ Returning ${esners.length} ESNers to client`);
     return esners;
   } catch (error) {
     console.error('❌ Error fetching all esners:', error);
