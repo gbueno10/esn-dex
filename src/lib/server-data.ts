@@ -79,7 +79,7 @@ export async function getFeaturedEsners(limit: number = 3): Promise<EsnerProfile
  */
 export async function getAllEsners(): Promise<EsnerProfile[]> {
   try {
-    console.log('🔍 getAllEsners: Starting query...');
+    // Simple query without debug logs
     
     // First, let's try a broader query to see what we have
     const allUsersSnapshot = await adminDb.collection('users').limit(5).get();

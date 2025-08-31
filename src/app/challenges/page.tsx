@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/components/AuthGate';
+import { RequireAuth } from '@/components/RequireAuth';
 import { getAllChallenges, getChallengeProgress, updateChallengeProgress, Challenge, ChallengeProgress } from '@/lib/firestore';
 import { ChallengeItem } from '@/components/ChallengeItem';
 
-export default function ChallengesPage() {
+function ChallengesPageContent() {
   const { user } = useAuth();
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [progress, setProgress] = useState<ChallengeProgress[]>([]);
@@ -127,5 +128,13 @@ export default function ChallengesPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function ChallengesPage() {
+  return (
+    <RequireAuth allowAnonymous={true}>
+      <ChallengesPageContent />
+    </RequireAuth>
   );
 }

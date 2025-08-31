@@ -72,12 +72,10 @@ export function AuthGate({ children }: AuthGateProps) {
           console.error('Error managing user:', error);
         }
       } else {
-        // No user - sign in anonymously
-        try {
-          await signInAnonymously(auth);
-        } catch (error) {
-          console.error('Anonymous sign-in failed:', error);
-        }
+        // No user - do NOT sign in anonymously automatically
+        // Users will only be signed in anonymously when they click "Start Playing"
+        setUser(null);
+        setUserRole(null);
       }
       setLoading(false);
     });

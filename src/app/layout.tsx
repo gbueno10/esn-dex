@@ -28,23 +28,9 @@ export default function RootLayout({
       <body className="min-h-screen bg-background text-foreground font-sans antialiased">
         <AuthGate>
           <div className="min-h-screen flex flex-col">
-            {/* Header - Mobile optimized */}
-            <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border">
-              <div className="px-4 py-3">
-                <div className="flex items-center justify-center">
-                  <h1 className="text-lg font-bold text-primary">
-                    Meet Your ESNners
-                  </h1>
-                </div>
-              </div>
-            </header>
-
-            {/* Main content - Mobile optimized */}
-            <main className="flex-1 px-4 py-4 pb-20">
+            <main className="flex-1 pb-20">
               {children}
             </main>
-
-            {/* Bottom Navigation */}
             <BottomNavigation />
           </div>
         </AuthGate>

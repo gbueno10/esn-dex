@@ -50,7 +50,7 @@ export function EsnersPageClient({ esners, userRole }: EsnersPageClientProps) {
   }));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-4 py-4">
       {/* Header */}
       <div className="text-center">
         <h1 className="text-2xl font-bold text-foreground mb-2">

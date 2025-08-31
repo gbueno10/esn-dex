@@ -100,8 +100,9 @@ export async function POST(request: NextRequest) {
       return createErrorResponse('User ID is required', 400, 'MISSING_UID');
     }
 
-    if (!email || !name) {
-      return createErrorResponse('Email and name are required', 400, 'MISSING_REQUIRED_FIELDS');
+    // For anonymous users (participants), email and name are not required
+    if (role !== 'participant' && (!email || !name)) {
+      return createErrorResponse('Email and name are required for non-participant users', 400, 'MISSING_REQUIRED_FIELDS');
     }
 
     // Check if user already exists
@@ -117,10 +118,10 @@ export async function POST(request: NextRequest) {
 
     // Create new user document
     const newUserData = {
-      email,
-      name,
+      email: email || null,
+      name: name || (role === 'participant' ? `Anonymous User` : undefined),
       role,
-      visible: true,
+      visible: role === 'participant' ? false : true, // Anonymous users are not visible by default
       createdAt: new Date(),
       updatedAt: new Date(),
     };

@@ -8,7 +8,28 @@ import { Users, Trophy, User } from 'lucide-react';
 
 export function BottomNavigation() {
   const pathname = usePathname();
-  const { userRole } = useAuth();
+  const { user, userRole } = useAuth();
+
+  // Não mostrar navegação na homepage
+  if (pathname === '/') {
+    return null;
+  }
+
+  // Páginas que sempre devem ter navegação (requerem auth mesmo que anônima)
+  const protectedPages = ['/esners', '/challenges'];
+  const isProtectedPage = protectedPages.some(page => pathname.startsWith(page));
+  
+  if (isProtectedPage) {
+    // Sempre mostrar navegação em páginas protegidas se há usuário
+    if (!user) {
+      return null; // Aguardar auth
+    }
+  } else {
+    // Em outras páginas, só mostrar para usuários não anônimos
+    if (!user || user.isAnonymous) {
+      return null;
+    }
+  }
 
   const navigationItems = [
     {
