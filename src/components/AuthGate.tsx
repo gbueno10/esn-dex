@@ -45,7 +45,7 @@ export function AuthGate({ children }: AuthGateProps) {
             const userData = await response.json();
             setUserRole(userData.role);
           } else if (response.status === 404) {
-            // New user - apenas participantes anônimos são criados automaticamente
+            // New user - only anonymous participants are created automatically
             if (authUser.isAnonymous) {
               const createResponse = await fetch('/api/users', {
                 method: 'POST',
@@ -63,7 +63,7 @@ export function AuthGate({ children }: AuthGateProps) {
                 setUserRole('participant');
               }
             } else {
-              // ESNers devem fazer login via /signin, não são criados automaticamente
+              // ESNers must sign in via /login; they are not auto-created
               console.log('ESNer needs to sign in properly');
               setUserRole(null);
             }

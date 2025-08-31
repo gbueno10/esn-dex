@@ -122,17 +122,17 @@ export function EsnerProfile({
 
       {/* Locked Content Warning */}
       {!showFullProfile && (
-        <Card className="border-amber-200 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-950/20">
+        <Card className="border-muted bg-muted/5">
           <CardContent className="p-6 text-center">
-            <QrCode className="w-12 h-12 text-amber-500 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-amber-700 dark:text-amber-300 mb-2">
+            <QrCode className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-foreground mb-2">
               Want to see more?
             </h3>
-            <p className="text-amber-600 dark:text-amber-400 mb-4 text-sm">
+            <p className="text-muted-foreground mb-4 text-sm">
               Ask {esner.name} to show you their QR code to unlock their full profile!
             </p>
-            
-            <div className="text-xs text-amber-600 dark:text-amber-400">
+
+            <div className="text-xs text-muted-foreground">
               <p className="font-medium mb-2">Unlock to see:</p>
               <div className="grid grid-cols-2 gap-2 text-left">
                 <div className="flex items-center">

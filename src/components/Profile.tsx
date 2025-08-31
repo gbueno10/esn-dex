@@ -287,9 +287,9 @@ export function Profile({
               </div>
 
               {/* Unlock CTA */}
-              <div className="text-center bg-muted/30 rounded-xl p-6 border border-dashed">
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <QrCode className="w-8 h-8 text-primary" />
+              <div className="text-center bg-muted/5 rounded-xl p-6 border border-dashed">
+                <div className="w-16 h-16 bg-muted/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <QrCode className="w-8 h-8 text-muted-foreground" />
                 </div>
                 <h3 className="text-xl font-semibold text-foreground mb-2">Want to see more?</h3>
                 <p className="text-muted-foreground mb-4">
@@ -300,19 +300,19 @@ export function Profile({
                   <p className="font-medium mb-3">🔓 Unlock to discover:</p>
                   <div className="grid grid-cols-2 gap-2 text-left max-w-sm mx-auto">
                     <div className="flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
+                      <span className="w-1.5 h-1.5 bg-muted rounded-full"></span>
                       <span>Nationality</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
+                      <span className="w-1.5 h-1.5 bg-muted rounded-full"></span>
                       <span>All interests</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
+                      <span className="w-1.5 h-1.5 bg-muted rounded-full"></span>
                       <span>Social media</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
+                      <span className="w-1.5 h-1.5 bg-muted rounded-full"></span>
                       <span>Full photo access</span>
                     </div>
                   </div>

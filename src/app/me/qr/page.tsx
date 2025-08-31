@@ -88,7 +88,7 @@ export default function QRPage() {
         <div>
           <h1 className="text-2xl font-bold">Your QR Code</h1>
           <p className="text-muted-foreground text-sm">
-            Share this with Erasmus participants
+            Share this QR code with Erasmus participants so they can unlock your profile
           </p>
         </div>
       </div>
@@ -101,12 +101,12 @@ export default function QRPage() {
             Profile Unlock Code
           </CardTitle>
           <CardDescription>
-            Participants can scan this QR code or use the link to unlock your profile
+            Share this QR code with Erasmus participants so they can unlock your profile
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {qrDataUrl && (
-            <div className="bg-white p-6 rounded-lg flex justify-center">
+            <div className="bg-transparent p-6 rounded-lg flex justify-center">
               <img
                 src={qrDataUrl}
                 alt="Profile unlock QR code"
@@ -166,25 +166,25 @@ export default function QRPage() {
         </CardHeader>
         <CardContent className="space-y-3 text-sm text-muted-foreground">
           <div className="flex items-start gap-3">
-            <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center text-xs font-medium text-primary">
+            <div className="w-6 h-6 bg-muted/10 rounded-full flex items-center justify-center text-xs font-medium text-muted-foreground">
               1
             </div>
-            <p>Share your QR code or link with Erasmus participants</p>
-          </div>
-          <div className="flex items-start gap-3">
-            <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center text-xs font-medium text-primary">
+             <p>Share your QR code or link with Erasmus participants</p>
+           </div>
+           <div className="flex items-start gap-3">
+            <div className="w-6 h-6 bg-muted/10 rounded-full flex items-center justify-center text-xs font-medium text-muted-foreground">
               2
             </div>
-            <p>They scan the code or visit the link</p>
-          </div>
-          <div className="flex items-start gap-3">
-            <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center text-xs font-medium text-primary">
+             <p>They scan the code or visit the link</p>
+           </div>
+           <div className="flex items-start gap-3">
+            <div className="w-6 h-6 bg-muted/10 rounded-full flex items-center justify-center text-xs font-medium text-muted-foreground">
               3
             </div>
-            <p>Your profile gets unlocked for them to view</p>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
+             <p>Your profile gets unlocked for them to view</p>
+           </div>
+         </CardContent>
+       </Card>
+     </div>
+   );
+ }

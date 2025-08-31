@@ -47,7 +47,7 @@ export default function EsnerDetailPage() {
     if (authLoading) return;
     
     if (!user) {
-      router.push('/signin');
+      router.push('/login');
       return;
     }
 

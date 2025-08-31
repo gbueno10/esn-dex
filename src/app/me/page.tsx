@@ -213,21 +213,21 @@ export default function MePage() {
 
       {/* QR Code Section - only show in view mode */}
       {!isEditing && (
-        <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border-0 shadow-xl">
+        <Card className="border-0 shadow-sm bg-muted/5">
           <CardHeader className="text-center">
             <CardTitle className="flex items-center justify-center gap-3 text-2xl">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                <QrCode className="h-6 w-6 text-white" />
+              <div className="w-12 h-12 bg-muted/10 rounded-full flex items-center justify-center">
+                <QrCode className="h-6 w-6 text-muted-foreground" />
               </div>
               Your QR Code
             </CardTitle>
-            <CardDescription className="text-lg">
+            <CardDescription className="text-lg text-muted-foreground">
               Share this QR code with Erasmus participants so they can unlock your profile
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center space-y-8">
             {user && (
-              <div className="bg-white p-8 rounded-2xl inline-block shadow-lg border-4 border-white dark:border-slate-800 dark:bg-slate-800">
+              <div className="p-6 rounded-2xl inline-block border border-muted bg-white shadow-lg dark:bg-slate-800 dark:border-slate-800">
                 <img
                   src={generateQRCodeImageUrl(generateProfileQRUrl(user.uid))}
                   alt="Profile QR Code"
@@ -236,13 +236,12 @@ export default function MePage() {
               </div>
             )}
             <div className="space-y-6">
-              <p className="text-gray-600 dark:text-gray-300 max-w-md mx-auto">
+              <p className="text-muted-foreground max-w-md mx-auto">
                 Erasmus participants can scan this code to unlock and view your complete profile with all your information
               </p>
               <div className="flex gap-4 justify-center flex-wrap">
                 <Button
                   variant="default"
-                  className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white border-0 shadow-lg"
                   onClick={() => router.push('/me/qr')}
                 >
                   <QrCode className="mr-2 h-4 w-4" />
@@ -250,7 +249,7 @@ export default function MePage() {
                 </Button>
                 <Button
                   variant="outline"
-                  className="border-2 border-blue-200 hover:bg-blue-50 dark:border-blue-800 dark:hover:bg-blue-950/20"
+                  className="border-muted"
                   onClick={() => {
                     if (navigator.share) {
                       navigator.share({
