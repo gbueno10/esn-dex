@@ -97,12 +97,12 @@ export default function EsnersPage() {
       {/* Header */}
       <div className="text-center">
         <h1 className="text-2xl font-bold text-foreground mb-2">
-          {isEsner ? 'Perfis ESNer' : 'Perfis ESNer'}
+          {isEsner ? 'ESNer Profiles' : 'ESNer Profiles'}
         </h1>
         <p className="text-muted-foreground text-sm">
           {isEsner
-            ? "Conecte-se com outros voluntários ESN da plataforma!"
-            : "Descubra nossos incríveis voluntários ESN. Pegue o QR code deles para desbloquear o perfil completo!"
+            ? "Connect with other ESN volunteers on the platform!"
+            : "Discover our amazing ESN volunteers. Get their QR code to unlock their full profile!"
           }
         </p>
       </div>
@@ -111,9 +111,9 @@ export default function EsnersPage() {
       {profiles.length === 0 ? (
         <Card className="mx-auto max-w-md">
           <CardHeader>
-            <CardTitle className="text-center">Nenhum Perfil Disponível</CardTitle>
+            <CardTitle className="text-center">No Profiles Available</CardTitle>
             <CardDescription className="text-center">
-              Volte mais tarde para ver os perfis.
+              Come back later to see the profiles.
             </CardDescription>
           </CardHeader>
         </Card>
@@ -125,7 +125,7 @@ export default function EsnersPage() {
               <div className="flex items-center gap-2 mb-4">
                 <UserCheck className="w-5 h-5 text-primary" />
                 <h2 className="text-xl font-semibold">
-                  Voluntários ESN
+                  ESN Volunteers
                   {isEsner && (
                     <span className="ml-2 text-sm text-muted-foreground">
                       ({profiles.length})
@@ -133,7 +133,7 @@ export default function EsnersPage() {
                   )}
                 </h2>
               </div>
-              <div className="grid grid-cols-1 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {profiles.map((profile) => (
                   <EsnerCard
                     key={profile.id}

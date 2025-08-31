@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Lock, QrCode, User, UserCheck } from 'lucide-react';
+import { Lock, QrCode, User, UserCheck, Globe } from 'lucide-react';
 import Link from 'next/link';
 
 interface Profile {
@@ -14,6 +14,8 @@ interface Profile {
   email?: string;
   userId: string;
   photoURL?: string;
+  nationality?: string;
+  bio?: string;
   starters?: string[];
   interests?: string[];
   visible?: boolean;
@@ -39,90 +41,97 @@ export function EsnerCard({ esner, id }: EsnerCardProps) {
   const isParticipant = esner.role === 'participant';
 
   // For participants, show a generic message since they don't have starters
-  const displayStarter = isEsner
-    ? (esner.starters?.[0] || 'Say hi!')
-    : 'Participante Erasmus';
+  const displayText = isEsner
+    ? (esner.bio || esner.starters?.[0] || 'Say hi!')
+    : 'Erasmus Participant';
 
   const profileImage = imageError ? null : esner.photoURL;
 
   return (
     <Link href={`/esners/${id}`}>
-      <Card className="overflow-hidden hover:shadow-lg transition-all duration-200 border-border hover:border-primary/20 cursor-pointer">
-        <div className="relative">
-          {/* Profile Image */}
-          <div className="h-48 bg-gradient-to-br from-muted to-muted-foreground/20 flex items-center justify-center">
-            <Avatar className={`w-24 h-24 border-2 border-background ${!isUnlocked && isEsner && userRole !== 'esnner' ? 'grayscale brightness-75' : ''}`}>
+      <Card className="group cursor-pointer transition-all duration-200 hover:shadow-md">
+        <CardContent className="p-0">
+          {/* Profile Image Section */}
+          <div className="relative h-48 flex items-center justify-center">
+            <Avatar className={`w-32 h-32 transition-all duration-200 group-hover:scale-105 ${!isUnlocked && isEsner && userRole !== 'esnner' ? 'blur-sm brightness-75' : ''}`}>
               <AvatarImage
                 src={profileImage || undefined}
                 alt={esner.name}
+                className="object-cover"
                 onError={() => setImageError(true)}
               />
               <AvatarFallback>
                 <User className="w-8 h-8" />
               </AvatarFallback>
             </Avatar>
+
+            {/* Status badge overlay */}
+            <div className="absolute top-3 right-3">
+              <Badge variant={isEsner ? "default" : "secondary"} className="text-xs">
+                {isEsner ? (
+                  <>
+                    <UserCheck className="w-3 h-3 mr-1" />
+                    ESNer
+                  </>
+                ) : (
+                  <>
+                    <User className="w-3 h-3 mr-1" />
+                    Participant
+                  </>
+                )}
+              </Badge>
+            </div>
+
+            {/* Lock/Unlock indicator */}
+            <div className="absolute bottom-3 left-3">
+              {!isUnlocked && isEsner && userRole !== 'esnner' ? (
+                <Badge variant="secondary" className="text-xs">
+                  <Lock className="w-3 h-3 mr-1" />
+                  Locked
+                </Badge>
+              ) : isEsner ? (
+                <Badge variant="outline" className="text-xs">
+                  <Lock className="w-3 h-3 mr-1" />
+                  Unlocked
+                </Badge>
+              ) : null}
+            </div>
           </div>
 
-          {/* Lock Overlay for locked ESNer profiles (only for participants) */}
-          {!isUnlocked && isEsner && userRole !== 'esnner' && (
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center">
-              <div className="text-center text-white">
-                <div className="w-12 h-12 bg-background/80 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Lock className="w-6 h-6 text-muted-foreground" />
-                </div>
-                <p className="text-sm font-semibold">Bloqueado</p>
-                <p className="text-xs opacity-90 mt-1">Escaneie QR para desbloquear</p>
+          {/* Content */}
+          <div className="p-4 space-y-3 mt-4">
+            <div>
+              <h3 className="font-semibold text-base truncate group-hover:text-primary transition-colors">
+                {esner.name}
+              </h3>
+              
+              <p className="text-foreground text-sm mt-1 line-clamp-2">
+                {displayText}
+              </p>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-foreground">
+                <Globe className="w-4 h-4" />
+                <span className="text-sm">?????</span>
+              </div>
+
+              <div className="text-xs">
+                {isEsner && !(isUnlocked || userRole === 'esnner') && (
+                  <Badge variant="outline" className="text-xs">
+                    Unlock
+                  </Badge>
+                )}
+                {isEsner && (isUnlocked || userRole === 'esnner') && (
+                  <Badge variant="outline" className="text-xs">
+                    Open
+                  </Badge>
+                )}
               </div>
             </div>
-          )}
-        </div>
-
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-lg font-semibold text-foreground">{esner.name}</h3>
-            <Badge
-              variant={isEsner ? "default" : "secondary"}
-              className={isEsner ? "bg-blue-500/10 text-blue-500 border-blue-500/20" : ""}
-            >
-              {isEsner ? (
-                <>
-                  <UserCheck className="w-3 h-3 mr-1" />
-                  ESNer
-                </>
-              ) : (
-                <>
-                  <User className="w-3 h-3 mr-1" />
-                  Participante
-                </>
-              )}
-            </Badge>
-          </div>
-
-          <p className="text-muted-foreground text-sm mb-3">
-            💬 {displayStarter}
-          </p>
-
-          <div className="flex justify-between items-center">
-            {isEsner ? (
-              (isUnlocked || userRole === 'esnner') ? (
-                <Badge variant="default" className="bg-green-500/10 text-green-500 border-green-500/20">
-                  Desbloqueado
-                </Badge>
-              ) : (
-                <Badge variant="secondary" className="text-xs">
-                  <QrCode className="w-3 h-3 mr-1" />
-                  Escaneie QR para desbloquear
-                </Badge>
-              )
-            ) : (
-              <Badge variant="outline" className="text-xs">
-                <User className="w-3 h-3 mr-1" />
-                Participante
-              </Badge>
-            )}
           </div>
         </CardContent>
       </Card>
     </Link>
   );
-}
+ }

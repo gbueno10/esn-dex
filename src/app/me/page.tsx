@@ -149,22 +149,30 @@ export default function MePage() {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin" />
+        <div className="text-center space-y-4">
+          <div className="w-12 h-12 border rounded-full flex items-center justify-center mx-auto">
+            <Loader2 className="h-6 w-6 animate-spin" />
+          </div>
+          <p className="text-foreground font-medium">Loading your profile...</p>
+        </div>
       </div>
     );
   }
 
   if (!profile) {
     return (
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-2xl mx-auto p-6">
         <Card>
-          <CardContent className="p-8 text-center">
-            <h2 className="text-2xl font-bold mb-4">Perfil não encontrado</h2>
-            <p className="text-muted-foreground mb-6">
-              Não foi possível carregar seu perfil. Tente novamente.
+          <CardContent className="p-12 text-center">
+            <div className="w-16 h-16 border rounded-full flex items-center justify-center mx-auto mb-6">
+              <span className="text-3xl">😕</span>
+            </div>
+            <h2 className="text-2xl font-bold mb-4">Profile not found</h2>
+            <p className="text-muted-foreground mb-8">
+              We couldn't load your profile. Please try again.
             </p>
             <Button onClick={() => window.location.reload()}>
-              Tentar Novamente
+              Try Again
             </Button>
           </CardContent>
         </Card>
@@ -173,75 +181,81 @@ export default function MePage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto space-y-8 p-6">
       {/* Success/Error Messages */}
       {success && (
-        <Alert className="border-green-200 bg-green-50">
-          <AlertDescription className="text-green-800">
-            Perfil atualizado com sucesso!
+        <Alert>
+          <AlertDescription>
+            ✅ Profile updated successfully!
           </AlertDescription>
         </Alert>
       )}
 
       {error && (
-        <Alert className="border-red-200 bg-red-50">
-          <AlertDescription className="text-red-800">
-            {error}
+        <Alert>
+          <AlertDescription>
+            ❌ {error}
           </AlertDescription>
         </Alert>
       )}
 
       {/* Profile Component */}
-      <Profile
-        profile={profile}
-        mode={isEditing ? 'edit' : 'view'}
-        onSave={handleSave}
-        onEdit={() => setIsEditing(true)}
-        onCancel={() => setIsEditing(false)}
-        saving={saving}
-      />
+      <Card>
+        <Profile
+          profile={profile}
+          mode={isEditing ? 'edit' : 'view'}
+          onSave={handleSave}
+          onEdit={() => setIsEditing(true)}
+          onCancel={() => setIsEditing(false)}
+          saving={saving}
+        />
+      </Card>
 
       {/* QR Code Section - only show in view mode */}
       {!isEditing && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <QrCode className="h-5 w-5" />
-              Seu QR Code
+        <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border-0 shadow-xl">
+          <CardHeader className="text-center">
+            <CardTitle className="flex items-center justify-center gap-3 text-2xl">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                <QrCode className="h-6 w-6 text-white" />
+              </div>
+              Your QR Code
             </CardTitle>
-            <CardDescription>
-              Compartilhe este QR code com participantes Erasmus para que eles possam desbloquear seu perfil
+            <CardDescription className="text-lg">
+              Share this QR code with Erasmus participants so they can unlock your profile
             </CardDescription>
           </CardHeader>
-          <CardContent className="text-center space-y-6">
+          <CardContent className="text-center space-y-8">
             {user && (
-              <div className="bg-white p-6 rounded-lg inline-block shadow-sm border">
+              <div className="bg-white p-8 rounded-2xl inline-block shadow-lg border-4 border-white dark:border-slate-800 dark:bg-slate-800">
                 <img
                   src={generateQRCodeImageUrl(generateProfileQRUrl(user.uid))}
                   alt="Profile QR Code"
-                  className="w-56 h-56"
+                  className="w-64 h-64"
                 />
               </div>
             )}
-            <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Participantes Erasmus podem escanear este código para desbloquear e visualizar seu perfil
+            <div className="space-y-6">
+              <p className="text-gray-600 dark:text-gray-300 max-w-md mx-auto">
+                Erasmus participants can scan this code to unlock and view your complete profile with all your information
               </p>
-              <div className="flex gap-3 justify-center flex-wrap">
+              <div className="flex gap-4 justify-center flex-wrap">
                 <Button
-                  variant="outline"
+                  variant="default"
+                  className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white border-0 shadow-lg"
                   onClick={() => router.push('/me/qr')}
                 >
                   <QrCode className="mr-2 h-4 w-4" />
-                  Ver QR em Tela Cheia
+                  View Fullscreen QR
                 </Button>
                 <Button
                   variant="outline"
+                  className="border-2 border-blue-200 hover:bg-blue-50 dark:border-blue-800 dark:hover:bg-blue-950/20"
                   onClick={() => {
                     if (navigator.share) {
                       navigator.share({
-                        title: 'Meu Perfil ESN',
-                        text: 'Escaneie este QR code para desbloquear meu perfil!',
+                        title: 'My ESN Profile',
+                        text: 'Scan this QR code to unlock my profile!',
                         url: generateProfileQRUrl(user?.uid || '')
                       });
                     } else {
@@ -249,7 +263,7 @@ export default function MePage() {
                     }
                   }}
                 >
-                  Compartilhar Link
+                  Share Profile Link
                 </Button>
               </div>
             </div>

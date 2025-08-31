@@ -25,7 +25,8 @@ import {
   X,
   Loader2,
   MapPin,
-  Globe
+  Globe,
+  QrCode
 } from 'lucide-react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -190,67 +191,139 @@ export function Profile({
 
   // Modo Locked (perfil bloqueado)
   if (mode === 'locked') {
-    const displayStarter = profile.starters?.[0] || 'Say hi!';
-
     return (
-      <div className="max-w-2xl mx-auto">
-        <Card className="bg-gray-900 text-white">
+      <div className="max-w-3xl mx-auto">
+        <Card className="shadow-lg">
           <CardContent className="p-8">
-            <div className="text-center mb-8">
-              <div className="relative inline-block">
-                <Avatar className="w-32 h-32 mx-auto mb-4">
-                  <AvatarImage 
-                    src={profile.photoURL} 
-                    alt={profile.name}
-                    className="profile-locked"
-                  />
-                  <AvatarFallback className="bg-gray-700 text-gray-500 text-2xl">
-                    {profile.name ? profile.name.split(' ').map(n => n[0]).join('').toUpperCase() : 'U'}
-                  </AvatarFallback>
-                </Avatar>
-                
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="bg-black bg-opacity-70 rounded-full p-3">
-                    <Lock className="w-8 h-8 text-white" />
+            {/* Header Section - Similar to unlocked */}
+            <div className="flex flex-col md:flex-row gap-6 mb-8 items-center">
+              <Avatar className="w-36 h-36 mx-auto md:mx-0 shadow-sm">
+                <AvatarImage 
+                  src={profile.photoURL} 
+                  alt={profile.name}
+                  className="object-cover blur-md brightness-75"
+                />
+                <AvatarFallback className="text-3xl">
+                  {profile.name ? profile.name.split(' ').map(n => n[0]).join('').toUpperCase() : 'U'}
+                </AvatarFallback>
+              </Avatar>
+              
+              <div className="flex-1 text-center">
+                <h1 className="text-4xl font-extrabold mb-1 text-foreground">
+                  {profile.name}
+                </h1>
+
+                {/* Nationality hidden */}
+                <p className="text-lg font-medium text-muted-foreground mb-4 flex items-center justify-center gap-2">
+                  <span className="text-2xl">🌍</span>
+                  <span>?????</span>
+                </p>
+
+                {/* Bio shown but marked as preview */}
+                {profile.bio && (
+                  <>
+                    <p className="text-base font-medium text-foreground leading-relaxed mb-4">{profile.bio}</p>
+                    <Separator className="my-6" />
+                  </>
+                )}
+
+                {/* Social media hidden */}
+                <div className="mb-4 flex justify-center">
+                  <div className="flex gap-4">
+                    <Badge variant="secondary" className="px-4 py-2">
+                      <Instagram className="w-4 h-4 mr-2" />
+                      Hidden
+                    </Badge>
+                    <Badge variant="secondary" className="px-4 py-2">
+                      <Linkedin className="w-4 h-4 mr-2" />
+                      Hidden
+                    </Badge>
                   </div>
                 </div>
               </div>
 
-              <h2 className="text-2xl font-bold mb-2">{profile.name}</h2>
-              {profile.nationality && (
-                <p className="text-gray-300 flex items-center justify-center gap-1">
-                  <Globe className="w-4 h-4" />
-                  {profile.nationality}
-                </p>
+              {/* Lock indicator */}
+              <div className="absolute top-4 right-4">
+                <Badge variant="secondary" className="gap-1">
+                  <Lock className="w-4 h-4" />
+                  Locked
+                </Badge>
+              </div>
+            </div>
+
+            {/* Content sections with same styling as unlocked */}
+            <div className="space-y-8">
+              {/* Conversation Starters */}
+              {profile.starters && profile.starters.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-3 mb-6">
+                    <MessageCircle className="w-6 h-6 text-primary" />
+                    <h3 className="text-2xl font-semibold text-foreground">Conversation Starters</h3>
+                  </div>
+                  <div className="space-y-4">
+                    {profile.starters.map((starter, index) => (
+                      <div key={index} className="bg-muted/50 rounded-lg p-4 border-l-4 border-primary">
+                        <p className="text-foreground font-medium flex items-start gap-2">
+                          <MessageCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                          {starter}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               )}
-            </div>
 
-            <div className="bg-gray-800 rounded-lg p-6 mb-6">
-              <h3 className="text-lg font-semibold text-white mb-3">Conversation Starter</h3>
-              <p className="text-gray-300">💬 {displayStarter}</p>
-            </div>
+              {/* Interests hidden */}
+              <div>
+                <div className="flex items-center gap-3 mb-6">
+                  <Heart className="w-6 h-6 text-primary" />
+                  <h3 className="text-2xl font-semibold text-foreground">Interests</h3>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Badge variant="secondary" className="px-3 py-1 text-sm">🔒 Hidden</Badge>
+                  <Badge variant="secondary" className="px-3 py-1 text-sm">🔒 Hidden</Badge>
+                  <Badge variant="secondary" className="px-3 py-1 text-sm">🔒 Hidden</Badge>
+                </div>
+              </div>
 
-            <div className="bg-yellow-900/30 border border-yellow-600 rounded-lg p-6 text-center">
-              <Lock className="w-12 h-12 text-yellow-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-yellow-400 mb-2">Locked Profile</h3>
-              <p className="text-yellow-200 mb-4">
-                The full profile of this ESNer is locked. Ask them to show their QR code or share the link to unlock!
-              </p>
-              <div className="text-sm text-yellow-300">
-                <p>Unlock to see:</p>
-                <ul className="list-disc list-inside mt-2 space-y-1">
-                  <li>Full photo</li>
-                  <li>Interests and hobbies</li>
-                  <li>Bio and details</li>
-                  <li>Social media links</li>
-                </ul>
+              {/* Unlock CTA */}
+              <div className="text-center bg-muted/30 rounded-xl p-6 border border-dashed">
+                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <QrCode className="w-8 h-8 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold text-foreground mb-2">Want to see more?</h3>
+                <p className="text-muted-foreground mb-4">
+                  Find <span className="font-semibold text-foreground">{profile.name}</span> and ask them to show you their QR code to unlock their full profile!
+                </p>
+                
+                <div className="text-sm text-muted-foreground">
+                  <p className="font-medium mb-3">🔓 Unlock to discover:</p>
+                  <div className="grid grid-cols-2 gap-2 text-left max-w-sm mx-auto">
+                    <div className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
+                      <span>Nationality</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
+                      <span>All interests</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
+                      <span>Social media</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
+                      <span>Full photo access</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
             {showBackButton && (
-              <div className="mt-6 text-center">
+              <div className="mt-8 text-center">
                 <Button 
-                  variant="secondary"
+                  variant="outline"
                   onClick={onBack}
                   className="w-full"
                 >
