@@ -1,10 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { YesenterCard } from '@/components/YesenterCard';
+import { EsnerCard } from '@/components/EsnerCard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useAuth } from '@/components/AuthGate';
 
-interface Yesenter {
+interface Esner {
   id: string;
   name: string;
   email?: string;
@@ -17,30 +18,53 @@ interface Yesenter {
   updatedAt: any;
 }
 
-export default function YesentersPage() {
-  const [yesenters, setYesenters] = useState<Yesenter[]>([]);
+export default function EsnersPage() {
+  const [esners, setEsners] = useState<Esner[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { user, userRole } = useAuth();
+  
+  // Assume que qualquer usuário que não seja explicitamente ESNer é participante
+  const isEsner = userRole === 'esnner';
+  const isParticipant = !isEsner;
 
   useEffect(() => {
-    const fetchYesenters = async () => {
+    const fetchEsners = async () => {
       try {
-        const response = await fetch('/api/esners');
+        const headers: HeadersInit = {};
+        
+        // Add authorization header if user is authenticated
+        if (user) {
+          try {
+            const token = await user.getIdToken();
+            headers['Authorization'] = `Bearer ${token}`;
+          } catch (error) {
+            console.error('Error getting token:', error);
+          }
+        }
+        
+        // Add viewer ID as query parameter
+        const url = user?.uid 
+          ? `/api/esners?viewerId=${user.uid}`
+          : '/api/esners';
+          
+        const response = await fetch(url, { headers });
+        
         if (!response.ok) {
-          throw new Error('Failed to fetch yesenters');
+          throw new Error('Failed to fetch esners');
         }
         const data = await response.json();
-        setYesenters(data);
+        setEsners(data);
       } catch (err) {
         setError('Failed to load profiles');
-        console.error('Error fetching yesenters:', err);
+        console.error('Error fetching esners:', err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchYesenters();
-  }, []);
+    fetchEsners();
+  }, [user]);
 
   if (loading) {
     return (
@@ -67,12 +91,15 @@ export default function YesentersPage() {
       <div className="text-center">
         <h1 className="text-2xl font-bold text-foreground mb-2">ESNner Profiles</h1>
         <p className="text-muted-foreground text-sm">
-          Discover our amazing ESN volunteers. Get their QR code to unlock their full profile!
+          {isEsner 
+            ? "Connect with fellow ESN volunteers from around the network!"
+            : "Discover our amazing ESN volunteers. Get their QR code to unlock their full profile!"
+          }
         </p>
       </div>
 
       {/* Content */}
-      {yesenters.length === 0 ? (
+      {esners.length === 0 ? (
         <Card className="mx-auto max-w-md">
           <CardHeader>
             <CardTitle className="text-center">No Profiles Available</CardTitle>
@@ -83,11 +110,11 @@ export default function YesentersPage() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 gap-4">
-          {yesenters.map((yesenter) => (
-            <YesenterCard
-              key={yesenter.id}
-              yesenter={yesenter}
-              id={yesenter.id}
+          {esners.map((esner) => (
+            <EsnerCard
+              key={esner.id}
+              esner={esner}
+              id={esner.id}
             />
           ))}
         </div>

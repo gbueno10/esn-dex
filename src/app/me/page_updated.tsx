@@ -19,7 +19,6 @@ type ProfileForm = {
   interests: string[];
   instagram?: string;
   linkedin?: string;
-  whatsapp?: string; // added
   visible: boolean;
 };
 
@@ -60,8 +59,7 @@ export default function MePage() {
               interests: userData.interests?.length > 0 ? userData.interests : [''],
               socials: {
                 instagram: userData.socials?.instagram || '',
-                linkedin: userData.socials?.linkedin || '',
-                whatsapp: userData.socials?.whatsapp || ''
+                linkedin: userData.socials?.linkedin || ''
               },
               visible: userData.visible || false
             });
@@ -99,8 +97,7 @@ export default function MePage() {
         interests: data.interests.filter(i => i.trim() !== ''),
         socials: {
           instagram: data.instagram || '',
-          linkedin: data.linkedin || '',
-          whatsapp: data.whatsapp || ''
+          linkedin: data.linkedin || ''
         },
         visible: data.visible
       };
@@ -129,8 +126,7 @@ export default function MePage() {
         interests: data.interests.filter(i => i.trim() !== ''),
         socials: {
           instagram: data.instagram,
-          linkedin: data.linkedin,
-          whatsapp: data.whatsapp
+          linkedin: data.linkedin
         },
         visible: data.visible
       });

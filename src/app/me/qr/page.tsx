@@ -10,6 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import { QrCode, Copy, ArrowLeft, Share2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import QRCode from 'qrcode';
+import { generateProfileQRUrl } from '@/lib/qr-utils';
 
 export default function QRPage() {
   const { user } = useAuth();
@@ -21,7 +22,7 @@ export default function QRPage() {
     if (!user) return;
 
     const generateQR = async () => {
-      const url = `${window.location.origin}/unlock/${user.uid}`;
+      const url = generateProfileQRUrl(user.uid);
       setUnlockUrl(url);
 
       try {

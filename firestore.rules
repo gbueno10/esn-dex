@@ -6,19 +6,8 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
     
-    // Yesenters collection
-    match /yesenters/{esnnerId} {
-      // Public read access if visible is true
-      allow read: if resource.data.visible == true || 
-                     (request.auth != null && 
-                      (request.auth.uid == esnnerId || 
-                       get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'));
-      
-      // Write access only for the owner or admin
-      allow write: if request.auth != null && 
-                      (request.auth.uid == esnnerId || 
-                       get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
-    }
+    // ESNers collection (now using users collection with role filtering)
+    // All public read access is handled through users collection above
     
     // Unlocks collection
     match /unlocks/{unlockId} {

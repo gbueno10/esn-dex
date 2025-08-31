@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from './AuthGate';
 import { cn } from '@/lib/utils';
-import { Users, Trophy, User, LogIn } from 'lucide-react';
+import { Users, Trophy, User } from 'lucide-react';
 
 export function BottomNavigation() {
   const pathname = usePathname();
@@ -20,7 +20,6 @@ export function BottomNavigation() {
       name: 'Challenges',
       href: '/challenges',
       icon: Trophy,
-      esnnerOnly: true, // Apenas para ESNers
     },
     {
       name: 'My Profile',
@@ -28,18 +27,11 @@ export function BottomNavigation() {
       icon: User,
       esnnerOnly: true, // Apenas para ESNers
     },
-    {
-      name: 'ESN Login',
-      href: '/signin',
-      icon: LogIn,
-      participantOnly: true, // Apenas para participantes
-    },
   ];
 
   // Filtrar itens baseado no papel do usuário
   const filteredItems = navigationItems.filter(item => {
     if (item.esnnerOnly) return userRole === 'esnner';
-    if (item.participantOnly) return userRole === 'participant';
     return true; // Mostrar para todos
   });
 

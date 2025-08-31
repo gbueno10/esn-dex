@@ -6,7 +6,7 @@ async function verifyAuthToken(authHeader: string | null) {
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return null;
   }
-
+  
   try {
     const token = authHeader.substring(7);
     const decodedToken = await adminAuth.verifyIdToken(token);
@@ -21,70 +21,48 @@ export async function GET(request: NextRequest) {
   try {
     const authHeader = request.headers.get('authorization');
     const user = await verifyAuthToken(authHeader);
-
+    
     // Get URL search params
     const { searchParams } = new URL(request.url);
     const viewerId = searchParams.get('viewerId') || user?.uid;
-    console.log('Viewer ID:', viewerId);
-    console.log('User from token:', user?.uid);
-
-    let profiles = [];
-
-    // Get viewer's role to determine what they can see
-    let viewerRole = 'participant'; // default
-    if (viewerId) {
-      const viewerDoc = await adminDb.collection('users').doc(viewerId).get();
-      const viewerData = viewerDoc.data();
-      viewerRole = viewerData?.role || 'participant';
-      console.log('Viewer role:', viewerRole);
-      console.log('Viewer data:', viewerData);
-    }
-
-    // Fetch ESNer profiles (only users with role == 'esnner')
-    const esnersSnapshot = await adminDb
+    
+    // Query for users with role 'esnner' and visible not false (includes null/undefined)
+    const usersSnapshot = await adminDb
       .collection('users')
       .where('role', '==', 'esnner')
       .get();
-
-    profiles = esnersSnapshot.docs
+    
+    // Filter out users where visible is explicitly false
+    const esners = usersSnapshot.docs
       .map(doc => {
         const data = doc.data() as any;
         return {
           id: doc.id,
           ...data,
         };
-      });
+      })
+      .filter((esner: any) => esner.visible !== false);
 
-    // If the viewer is a participant, only show visible profiles
-    if (viewerRole !== 'esnner') {
-      profiles = profiles.filter((esner: any) => esner.visible !== false);
-    }
-
-    // If we have a viewer, check unlock status for each profile
+    // If we have a viewer, check unlock status for each esner
     if (viewerId) {
       // Get viewer's unlocked profiles
       const viewerDoc = await adminDb.collection('users').doc(viewerId).get();
       const viewerData = viewerDoc.data();
       const unlockedProfiles = viewerData?.unlockedProfiles || [];
 
-      const profilesWithUnlockStatus = profiles.map(profile => ({
-        ...profile,
-        // ESNers always see profiles as unlocked
-        isUnlocked: viewerRole === 'esnner' || unlockedProfiles.includes(profile.id)
+      const esnersWithUnlockStatus = esners.map(esner => ({
+        ...esner,
+        isUnlocked: unlockedProfiles.includes(esner.id)
       }));
-
-      return NextResponse.json(profilesWithUnlockStatus);
+      
+      return NextResponse.json(esnersWithUnlockStatus);
     }
 
-    // No viewer provided: default to locked for participants, unlocked for ESNers
-    return NextResponse.json(profiles.map(profile => ({ 
-      ...profile, 
-      isUnlocked: viewerRole === 'esnner' 
-    })));
+    return NextResponse.json(esners.map(esner => ({ ...esner, isUnlocked: false })));
   } catch (error: any) {
-    console.error('Get profiles error:', error);
+    console.error('Get esners error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch profiles' },
+      { error: 'Failed to fetch esners' },
       { status: 500 }
     );
   }
@@ -92,7 +70,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, email, userId, ...profileData } = await request.json();
+    const { name, email, userId, ...esnerData } = await request.json();
 
     if (!name || !userId) {
       return NextResponse.json(
@@ -116,8 +94,11 @@ export async function POST(request: NextRequest) {
       name,
       email,
       updatedAt: new Date(),
-      ...profileData,
+      ...esnerData,
     });
+
+    // No longer need to create separate unlock document
+    // Unlock info is now stored in the viewer's user document
 
     return NextResponse.json({
       id: userId,
@@ -126,9 +107,9 @@ export async function POST(request: NextRequest) {
       userId,
     });
   } catch (error: any) {
-    console.error('Create profile error:', error);
+    console.error('Create esner error:', error);
     return NextResponse.json(
-      { error: 'Failed to create profile' },
+      { error: 'Failed to create esner' },
       { status: 500 }
     );
   }

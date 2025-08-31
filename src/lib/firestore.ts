@@ -142,29 +142,6 @@ export async function createOrUpdateEsner(uid: string, data: Partial<Esner>) {
   }
 }
 
-// Unlock operations
-export async function checkUnlock(participantId: string, userId: string): Promise<boolean> {
-  const unlocksRef = collection(db, 'unlocks');
-  const q = query(
-    unlocksRef, 
-    where('participantId', '==', participantId),
-    where('userId', '==', userId),
-    limit(1)
-  );
-  const querySnapshot = await getDocs(q);
-  
-  return !querySnapshot.empty;
-}
-
-export async function createUnlock(participantId: string, userId: string) {
-  const unlocksRef = collection(db, 'unlocks');
-  await addDoc(unlocksRef, {
-    participantId,
-    userId,
-    createdAt: serverTimestamp(),
-  });
-}
-
 // Challenge operations
 export async function getAllChallenges(): Promise<Challenge[]> {
   const challengesRef = collection(db, 'challenges');

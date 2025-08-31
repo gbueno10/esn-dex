@@ -5,12 +5,15 @@ async function seed() {
   try {
     console.log('Starting seed...');
 
-    // Seed yesenters
-    console.log('Seeding yesenters...');
-    for (const yesenter of seedData.yesenters) {
-      const { id, ...data } = yesenter;
-      await adminDb.collection('yesenters').doc(id).set(data);
-      console.log(`Created yesenter: ${data.name}`);
+    // Seed users (ESNers)
+    console.log('Seeding users (ESNers)...');
+    for (const esner of seedData.esners) {
+      const { id, ...data } = esner;
+      await adminDb.collection('users').doc(id).set({
+        ...data,
+        role: 'esnner'
+      });
+      console.log(`Created ESNer: ${data.name}`);
     }
 
     // Seed challenges

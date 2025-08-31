@@ -37,10 +37,10 @@ npm run seed
 
 ## Routes
 
-- `/` - Redirects to /yesenters
-- `/yesenters` - ESNner profiles grid
-- `/yesenters/[id]` - Individual profile view
-- `/unlock/[esnnerId]` - Unlock profile page
+- `/` - Redirects to /esners
+- `/esners` - ESNer profiles grid  
+- `/esners/[id]` - Individual profile view
+- `/unlock/[esnerId]` - Unlock profile page
 - `/challenges` - Challenges list
 - `/signin` - ESNner authentication
 - `/me` - ESNner profile editor

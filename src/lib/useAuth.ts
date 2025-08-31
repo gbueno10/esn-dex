@@ -7,6 +7,7 @@ export interface UserProfile {
   email: string | null;
   role: string;
   name?: string;
+  unlockedProfiles?: string[];
 }
 
 export function useAuth() {
