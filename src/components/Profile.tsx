@@ -192,7 +192,7 @@ export function Profile({
   // Modo Locked (perfil bloqueado)
   if (mode === 'locked') {
     return (
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6">
         <Card className="shadow-lg">
           <CardContent className="p-8">
             {/* Header Section - Similar to unlocked */}
@@ -341,23 +341,24 @@ export function Profile({
   // Modo Edit (edição)
   if (mode === 'edit') {
     return (
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="max-w-4xl mx-auto space-y-6 px-4 sm:px-6">
         <form onSubmit={handleSubmit(handleSave)} className="space-y-6">
           {/* Edit Header */}
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                   <CardTitle className="flex items-center gap-2">
                     <Edit2 className="h-5 w-5" />
                     Editing Profile
                   </CardTitle>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                   <Button 
                     type="button"
                     variant="outline"
                     onClick={onCancel}
+                    className="w-full sm:w-auto"
                   >
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     Cancel
@@ -365,6 +366,7 @@ export function Profile({
                   <Button 
                     type="submit" 
                     disabled={saving || localSaving}
+                    className="w-full sm:w-auto"
                   >
                     {(saving || localSaving) ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -608,14 +610,14 @@ export function Profile({
 
   // Modo View/Unlocked (visualização completa)
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto space-y-6 px-4 sm:px-6">
       {/* Header with Edit Button (only in view mode) */}
       {mode === 'view' && (
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 flex-wrap">
                   <User className="h-5 w-5" />
                   {mode === 'view' ? 'My Profile' : 'ESNer Profile'}
                   {profile.visible ? (
@@ -629,7 +631,7 @@ export function Profile({
                 <Button 
                   onClick={onEdit}
                   variant="outline"
-                  className="ml-4"
+                  className="w-full sm:w-auto"
                 >
                   <Edit2 className="mr-2 h-4 w-4" />
                   Edit Profile
