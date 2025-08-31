@@ -1,0 +1,184 @@
+import { adminDb } from '@/lib/firebase-admin';
+
+export interface EsnerProfile {
+  id: string;
+  uid: string;
+  name: string;
+  email?: string;
+  userId: string;
+  photoURL?: string;
+  bio?: string;
+  location?: string;
+  starters?: string[];
+  interests?: string[];
+  socials?: {
+    instagram?: string;
+    linkedin?: string;
+  };
+  visible?: boolean;
+  role?: string;
+  createdAt: any;
+  updatedAt: any;
+  unlockedCount?: number;
+}
+
+/**
+ * Fetch featured ESNers for the homepage (server-side)
+ */
+export async function getFeaturedEsners(limit: number = 3): Promise<EsnerProfile[]> {
+  try {
+    // Query for featured ESNers - simplified to avoid index requirements
+    const querySnapshot = await adminDb
+      .collection('users')
+      .where('role', '==', 'esner')
+      .where('visible', '==', true)
+      .limit(20) // Get more to filter client-side
+      .get();
+
+    const esners: EsnerProfile[] = [];
+    querySnapshot.forEach((doc: any) => {
+      const data = doc.data();
+      esners.push({
+        id: doc.id,
+        uid: doc.id,
+        name: data.name || '',
+        email: data.email || '',
+        userId: data.userId || doc.id,
+        photoURL: data.photoURL || data.photo || null,
+        bio: data.bio || data.description || '',
+        location: data.location || data.city || '',
+        starters: data.starters || [],
+        interests: data.interests || data.tags || [],
+        socials: {
+          instagram: data.instagramUrl || data.socials?.instagram || '',
+          linkedin: data.linkedinUrl || data.socials?.linkedin || '',
+        },
+        visible: data.visible !== false,
+        role: data.role || 'esner',
+        createdAt: data.createdAt || null,
+        updatedAt: data.updatedAt || null,
+        unlockedCount: data.unlockedCount || 0,
+      });
+    });
+
+    // Sort by unlockedCount client-side and limit
+    return esners
+      .sort((a, b) => (b.unlockedCount || 0) - (a.unlockedCount || 0))
+      .slice(0, limit);
+  } catch (error) {
+    console.error('Error fetching featured esners:', error);
+    return [];
+  }
+}
+
+/**
+ * Fetch all visible ESNer profiles (server-side)
+ */
+export async function getAllEsners(): Promise<EsnerProfile[]> {
+  try {
+    const querySnapshot = await adminDb
+      .collection('users')
+      .where('role', '==', 'esner')
+      .where('visible', '==', true)
+      .get();
+
+    const esners: EsnerProfile[] = [];
+    querySnapshot.forEach((doc: any) => {
+      const data = doc.data();
+      esners.push({
+        id: doc.id,
+        uid: doc.id,
+        name: data.name || '',
+        email: data.email || '',
+        userId: data.userId || doc.id,
+        photoURL: data.photoURL || data.photo || null,
+        bio: data.bio || data.description || '',
+        location: data.location || data.city || '',
+        starters: data.starters || [],
+        interests: data.interests || data.tags || [],
+        socials: {
+          instagram: data.instagramUrl || data.socials?.instagram || '',
+          linkedin: data.linkedinUrl || data.socials?.linkedin || '',
+        },
+        visible: data.visible !== false,
+        role: data.role || 'esner',
+        createdAt: data.createdAt || null,
+        updatedAt: data.updatedAt || null,
+        unlockedCount: data.unlockedCount || 0,
+      });
+    });
+
+    return esners;
+  } catch (error) {
+    console.error('Error fetching all esners:', error);
+    return [];
+  }
+}
+
+/**
+ * Get ESNer profile by ID (server-side)
+ */
+export async function getEsnerById(id: string): Promise<EsnerProfile | null> {
+  try {
+    const doc = await adminDb
+      .collection('users')
+      .doc(id)
+      .get();
+
+    if (!doc.exists) {
+      return null;
+    }
+
+    const data = doc.data();
+    
+    if (!data || data.role !== 'esner' || data.visible === false) {
+      return null;
+    }
+
+    return {
+      id: doc.id,
+      uid: doc.id,
+      name: data.name || '',
+      email: data.email || '',
+      userId: data.userId || doc.id,
+      photoURL: data.photoURL || data.photo || null,
+      bio: data.bio || data.description || '',
+      location: data.location || data.city || '',
+      starters: data.starters || [],
+      interests: data.interests || data.tags || [],
+      socials: {
+        instagram: data.instagramUrl || data.socials?.instagram || '',
+        linkedin: data.linkedinUrl || data.socials?.linkedin || '',
+      },
+      visible: data.visible !== false,
+      role: data.role || 'esner',
+      createdAt: data.createdAt || null,
+      updatedAt: data.updatedAt || null,
+      unlockedCount: data.unlockedCount || 0,
+    };
+  } catch (error) {
+    console.error('Error fetching esner by ID:', error);
+    return null;
+  }
+}
+
+/**
+ * Check if user has unlocked a specific profile
+ */
+export async function hasUserUnlockedProfile(userId: string, profileId: string): Promise<boolean> {
+  try {
+    const userDoc = await adminDb.collection('users').doc(userId).get();
+    
+    if (!userDoc.exists) {
+      return false;
+    }
+    
+    const userData = userDoc.data();
+    const unlockedProfiles = userData?.unlockedProfiles || [];
+    
+    return unlockedProfiles.includes(profileId);
+  } catch (error) {
+    console.error('Error checking unlock status:', error);
+    return false;
+  }
+}
