@@ -352,23 +352,6 @@ export function ChallengesPageClient() {
           </p>
         </CardContent>
       </Card>
-
-      {/* Terms Footer */}
-      <Card className="mt-6 border-amber-200 bg-amber-50/50">
-        <CardContent className="p-3 sm:p-4 text-center">
-          <p className="text-xs text-amber-700 mb-2">
-            ⚠️ Ao participar dos challenges, você assume total responsabilidade por suas ações
-          </p>
-          <a 
-            href="/terms" 
-            className="text-xs text-amber-600 hover:text-amber-800 underline font-medium"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Leia nossos Termos de Serviço
-          </a>
-        </CardContent>
-      </Card>
     </div>
   );
 }

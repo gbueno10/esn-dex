@@ -95,18 +95,17 @@ export function HomePageClient({ featuredEsners }: HomePageClientProps) {
           </div>
 
           {/* Terms Notice */}
-          <div className="pt-8 border-t border-border/50">
-            <p className="text-xs text-muted-foreground text-center">
+          <div className="pt-6">
+            <p className="text-xs text-muted-foreground/60 text-center">
               By using this app, you agree to our{' '}
               <a 
                 href="/terms" 
-                className="text-primary hover:underline"
+                className="text-primary/60 hover:text-primary underline"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                Terms of Service
+                Terms
               </a>
-              {' '}and assume full responsibility for your actions.
             </p>
           </div>
         </div>
