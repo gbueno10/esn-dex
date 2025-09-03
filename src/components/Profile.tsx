@@ -677,22 +677,23 @@ export function Profile({
               {/* Socials next (centered, no heading) */}
               {(profile.socials?.instagram || profile.socials?.linkedin || profile.socials?.whatsapp) && (
                 <div className="mb-4 flex justify-center">
-                  <div className="flex gap-4">
+                  <div className="flex flex-wrap gap-2 sm:gap-4 justify-center">
                     {profile.socials?.instagram && (
                       <Button
                         variant="default"
                         size="sm"
                         asChild
-                        className="px-4 py-2 font-medium"
+                        className="px-3 py-2 font-medium text-xs sm:text-sm flex-shrink-0"
                       >
                         <a
                           href={`https://instagram.com/${profile.socials.instagram?.replace('@', '') || ''}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-2"
+                          className="flex items-center gap-1 sm:gap-2"
                         >
-                          <Instagram className="w-4 h-4" />
-                          {profile.socials.instagram}
+                          <Instagram className="w-3 h-3 sm:w-4 sm:h-4" />
+                          <span className="hidden sm:inline">{profile.socials.instagram}</span>
+                          <span className="sm:hidden">IG</span>
                         </a>
                       </Button>
                     )}
@@ -702,16 +703,17 @@ export function Profile({
                         variant="default"
                         size="sm"
                         asChild
-                        className="px-4 py-2 font-medium"
+                        className="px-3 py-2 font-medium text-xs sm:text-sm flex-shrink-0"
                       >
                         <a
                           href={profile.socials.linkedin}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-2"
+                          className="flex items-center gap-1 sm:gap-2"
                         >
-                          <Linkedin className="w-4 h-4" />
-                          LinkedIn
+                          <Linkedin className="w-3 h-3 sm:w-4 sm:h-4" />
+                          <span className="hidden sm:inline">LinkedIn</span>
+                          <span className="sm:hidden">IN</span>
                         </a>
                       </Button>
                     )}
@@ -721,16 +723,17 @@ export function Profile({
                         variant="default"
                         size="sm"
                         asChild
-                        className="px-4 py-2 font-medium"
+                        className="px-3 py-2 font-medium text-xs sm:text-sm flex-shrink-0"
                       >
                         <a
                           href={`https://wa.me/${String(profile.socials.whatsapp).replace(/\D/g, '')}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-2"
+                          className="flex items-center gap-1 sm:gap-2"
                         >
-                          <MessageCircle className="w-4 h-4" />
-                          WhatsApp
+                          <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+                          <span className="hidden sm:inline">WhatsApp</span>
+                          <span className="sm:hidden">WA</span>
                         </a>
                       </Button>
                     )}

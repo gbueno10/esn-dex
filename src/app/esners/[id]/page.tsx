@@ -107,10 +107,6 @@ export default function EsnerDetailPage() {
 
         if (userResponse.ok) {
           const currentUserData = await userResponse.json();
-          console.log('Current user data:', currentUserData);
-          console.log('ESNer ID we are looking for:', esnerId);
-          console.log('Unlocked profiles:', currentUserData.unlockedProfiles);
-          console.log('User role:', userRole);
           setUserData(currentUserData);
         }
 
@@ -167,13 +163,6 @@ export default function EsnerDetailPage() {
 
   // Verificar se o perfil está desbloqueado
   const isUnlocked = userRole === 'esnner' || userData?.unlockedProfiles?.includes(esnerId) || false;
-  
-  console.log('Is unlocked check:', {
-    esnerId,
-    userRole,
-    unlockedProfiles: userData?.unlockedProfiles,
-    isUnlocked
-  });
 
   if (!isUnlocked && esner) {
     return (

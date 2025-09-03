@@ -25,8 +25,6 @@ export async function GET(request: NextRequest) {
     // Get URL search params
     const { searchParams } = new URL(request.url);
     const viewerId = searchParams.get('viewerId') || user?.uid;
-    console.log('Viewer ID:', viewerId);
-    console.log('User from token:', user?.uid);
 
     let profiles = [];
 

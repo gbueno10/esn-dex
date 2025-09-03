@@ -147,7 +147,7 @@ export async function POST(request: NextRequest) {
       const newUserData = {
         email: email || null,
         role,
-        visible: role === 'participant' ? false : true, // Anonymous users are not visible by default
+        visible: false, // All users are hidden by default, must manually set visible
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -186,7 +186,7 @@ export async function POST(request: NextRequest) {
         const newUserData = {
           email: email || null,
           role,
-          visible: role === 'participant' ? false : true,
+          visible: false, // All users are hidden by default, must manually set visible
           createdAt: new Date(),
           updatedAt: new Date(),
         };

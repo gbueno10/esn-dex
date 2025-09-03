@@ -234,21 +234,23 @@ export function EsnerProfile({
                 <CardTitle className="text-lg">Connect</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap gap-2 sm:gap-3 justify-center sm:justify-start">
                   {esner.socials?.instagram && (
                     <Button
                       asChild
                       variant="outline"
                       size="sm"
-                      className="border-pink-200 hover:bg-pink-50 dark:border-pink-800 dark:hover:bg-pink-950"
+                      className="border-pink-200 hover:bg-pink-50 dark:border-pink-800 dark:hover:bg-pink-950 px-2 sm:px-3 text-xs sm:text-sm flex-shrink-0"
                     >
                       <a 
                         href={`https://instagram.com/${esner.socials.instagram.replace('@', '')}`}
                         target="_blank"
                         rel="noopener noreferrer"
+                        className="flex items-center gap-1 sm:gap-2"
                       >
-                        <Instagram className="w-4 h-4 mr-2 text-pink-500" />
-                        Instagram
+                        <Instagram className="w-3 h-3 sm:w-4 sm:h-4 text-pink-500" />
+                        <span className="hidden sm:inline">Instagram</span>
+                        <span className="sm:hidden">IG</span>
                       </a>
                     </Button>
                   )}
@@ -258,15 +260,17 @@ export function EsnerProfile({
                       asChild
                       variant="outline"
                       size="sm"
-                      className="border-blue-200 hover:bg-blue-50 dark:border-blue-800 dark:hover:bg-blue-950"
+                      className="border-blue-200 hover:bg-blue-50 dark:border-blue-800 dark:hover:bg-blue-950 px-2 sm:px-3 text-xs sm:text-sm flex-shrink-0"
                     >
                       <a 
                         href={esner.socials.linkedin}
                         target="_blank"
                         rel="noopener noreferrer"
+                        className="flex items-center gap-1 sm:gap-2"
                       >
-                        <Linkedin className="w-4 h-4 mr-2 text-blue-600" />
-                        LinkedIn
+                        <Linkedin className="w-3 h-3 sm:w-4 sm:h-4 text-blue-600" />
+                        <span className="hidden sm:inline">LinkedIn</span>
+                        <span className="sm:hidden">IN</span>
                       </a>
                     </Button>
                   )}

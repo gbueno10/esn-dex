@@ -79,15 +79,11 @@ export async function getFeaturedEsners(limit: number = 3): Promise<EsnerProfile
  */
 export async function getAllEsners(): Promise<EsnerProfile[]> {
   try {
-    console.log('� Fetching all ESNers from database...');
-    
     const querySnapshot = await adminDb
       .collection('users')
       .where('role', '==', 'esnner')
       .where('visible', '==', true)
       .get();
-
-    console.log(`📊 Found ${querySnapshot.size} visible ESNers in database`);
 
     const esners: EsnerProfile[] = [];
     querySnapshot.forEach((doc: any) => {
@@ -118,7 +114,6 @@ export async function getAllEsners(): Promise<EsnerProfile[]> {
       });
     });
 
-    console.log(`✅ Returning ${esners.length} ESNers to client`);
     return esners;
   } catch (error) {
     console.error('❌ Error fetching all esners:', error);
