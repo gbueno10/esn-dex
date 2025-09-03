@@ -40,8 +40,10 @@ const profileSchema = z.object({
   photoURL: z.string().optional().or(z.literal('')),
   bio: z.string().max(300, 'Bio is too long').optional(),
   nationality: z.string().max(50, 'Nationality is too long').optional(),
-  starters: z.array(z.string().min(1).max(100)).min(1, 'At least one starter is required').max(3, 'Maximum 3 starters'),
-  interests: z.array(z.string().min(1).max(30)).min(1, 'At least one interest is required'),
+  starters: z.array(z.string().max(100)).max(3, 'Maximum 3 starters').optional()
+    .transform(arr => arr?.filter(s => s && s.trim().length > 0) || []),
+  interests: z.array(z.string().max(30)).optional()
+    .transform(arr => arr?.filter(s => s && s.trim().length > 0) || []),
   instagram: z.string().max(50, 'Instagram is too long').optional(),
   linkedin: z.string().max(100, 'LinkedIn is too long').optional(),
   whatsapp: z.string().max(30, 'WhatsApp is too long').optional(),
@@ -56,8 +58,8 @@ export interface ProfileData {
   photoURL?: string;
   bio?: string;
   nationality?: string;
-  starters: string[];
-  interests: string[];
+  starters?: string[];
+  interests?: string[];
   socials?: {
     instagram?: string;
     linkedin?: string;
@@ -105,8 +107,8 @@ export function Profile({
       photoURL: profile.photoURL || '',
       bio: profile.bio || '',
       nationality: profile.nationality || '',
-      starters: profile.starters?.length > 0 ? profile.starters : [''],
-      interests: profile.interests?.length > 0 ? profile.interests : [''],
+      starters: profile.starters && profile.starters.length > 0 ? profile.starters : [''],
+      interests: profile.interests && profile.interests.length > 0 ? profile.interests : [''],
       instagram: profile.socials?.instagram || '',
       linkedin: profile.socials?.linkedin || '',
       whatsapp: profile.socials?.whatsapp || '',
@@ -170,22 +172,26 @@ export function Profile({
   };
 
   const addStarter = () => {
-    if (watchedStarters.length < 3) {
-      setValue('starters', [...watchedStarters, '']);
+    const currentStarters = watchedStarters || [];
+    if (currentStarters.length < 3) {
+      setValue('starters', [...currentStarters, '']);
     }
   };
 
   const removeStarter = (index: number) => {
-    const newStarters = watchedStarters.filter((_, i) => i !== index);
+    const currentStarters = watchedStarters || [];
+    const newStarters = currentStarters.filter((_, i) => i !== index);
     setValue('starters', newStarters.length > 0 ? newStarters : ['']);
   };
 
   const addInterest = () => {
-    setValue('interests', [...watchedInterests, '']);
+    const currentInterests = watchedInterests || [];
+    setValue('interests', [...currentInterests, '']);
   };
 
   const removeInterest = (index: number) => {
-    const newInterests = watchedInterests.filter((_, i) => i !== index);
+    const currentInterests = watchedInterests || [];
+    const newInterests = currentInterests.filter((_, i) => i !== index);
     setValue('interests', newInterests.length > 0 ? newInterests : ['']);
   };
 
@@ -194,10 +200,10 @@ export function Profile({
     return (
       <div className="max-w-3xl mx-auto px-4 sm:px-6">
         <Card className="shadow-lg">
-          <CardContent className="p-8">
+          <CardContent className="p-4 sm:p-6 md:p-8">
             {/* Header Section - Similar to unlocked */}
-            <div className="flex flex-col md:flex-row gap-6 mb-8 items-center">
-              <Avatar className="w-36 h-36 mx-auto md:mx-0 shadow-sm">
+            <div className="flex flex-col md:flex-row gap-4 md:gap-6 mb-6 md:mb-8 items-center">
+              <Avatar className="w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 mx-auto md:mx-0 shadow-sm">
                 <AvatarImage 
                   src={profile.photoURL} 
                   alt={profile.name}
@@ -209,7 +215,7 @@ export function Profile({
               </Avatar>
               
               <div className="flex-1 text-center">
-                <h1 className="text-4xl font-extrabold mb-1 text-foreground">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold mb-1 text-foreground">
                   {profile.name}
                 </h1>
 
@@ -252,16 +258,16 @@ export function Profile({
             </div>
 
             {/* Content sections with same styling as unlocked */}
-            <div className="space-y-8">
+            <div className="space-y-4 sm:space-y-6 md:space-y-8">
               {/* Conversation Starters */}
               {profile.starters && profile.starters.length > 0 && (
                 <div>
                   <div className="flex items-center gap-3 mb-6">
                     <MessageCircle className="w-6 h-6 text-primary" />
-                    <h3 className="text-2xl font-semibold text-foreground">Conversation Starters</h3>
+                                      <h3 className="text-lg sm:text-xl md:text-2xl font-bold mb-2 sm:mb-3 md:mb-4">About Me</h3>
                   </div>
                   <div className="space-y-4">
-                    {profile.starters.map((starter, index) => (
+                    {profile.starters?.map((starter, index) => (
                       <div key={index} className="bg-muted/50 rounded-lg p-4 border-l-4 border-primary">
                         <p className="text-foreground font-medium flex items-start gap-2">
                           <MessageCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
@@ -291,7 +297,7 @@ export function Profile({
                 <div className="w-16 h-16 bg-muted/10 rounded-full flex items-center justify-center mx-auto mb-4">
                   <QrCode className="w-8 h-8 text-muted-foreground" />
                 </div>
-                <h3 className="text-xl font-semibold text-foreground mb-2">Want to see more?</h3>
+                <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-2">Want to see more?</h3>
                 <p className="text-muted-foreground mb-4">
                   Find <span className="font-semibold text-foreground">{profile.name}</span> and ask them to show you their QR code to unlock their full profile!
                 </p>
@@ -341,8 +347,8 @@ export function Profile({
   // Modo Edit (edição)
   if (mode === 'edit') {
     return (
-      <div className="max-w-4xl mx-auto space-y-6 px-4 sm:px-6">
-        <form onSubmit={handleSubmit(handleSave)} className="space-y-6">
+      <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6 px-4 sm:px-6">
+        <form onSubmit={handleSubmit(handleSave)} className="space-y-4 sm:space-y-6">
           {/* Edit Header */}
           <Card>
             <CardHeader>
@@ -383,7 +389,7 @@ export function Profile({
           {/* Photo upload card - placed first for better UX */}
           <Card>
             <CardHeader>
-              <CardTitle>Profile Photo</CardTitle>
+              <CardTitle className="text-lg sm:text-xl">Profile Photo</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex flex-col items-center gap-4">
@@ -410,7 +416,7 @@ export function Profile({
           {/* Basic Info */}
           <Card>
             <CardHeader>
-              <CardTitle>Basic Information</CardTitle>
+              <CardTitle className="text-lg sm:text-xl">Basic Information</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -457,16 +463,16 @@ export function Profile({
           {/* Conversation Starters */}
           <Card>
             <CardHeader>
-              <CardTitle>Conversation Starters</CardTitle>
+              <CardTitle className="text-lg sm:text-xl">Conversation Starters</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {watchedStarters.map((starter, index) => (
+              {(watchedStarters || []).map((starter, index) => (
                 <div key={index} className="flex gap-2">
                   <Input
                     {...register(`starters.${index}`)}
                     placeholder="e.g. Want to grab a coffee?"
                   />
-                  {watchedStarters.length > 1 && (
+                  {(watchedStarters || []).length > 1 && (
                     <Button
                       type="button"
                       variant="outline"
@@ -479,7 +485,7 @@ export function Profile({
                 </div>
               ))}
               
-              {watchedStarters.length < 3 && (
+              {(watchedStarters || []).length < 3 && (
                 <Button
                   type="button"
                   variant="outline"
@@ -500,16 +506,16 @@ export function Profile({
           {/* Interests */}
           <Card>
             <CardHeader>
-              <CardTitle>Interests</CardTitle>
+              <CardTitle className="text-lg sm:text-xl">Interests</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {watchedInterests.map((interest, index) => (
+              {(watchedInterests || []).map((interest, index) => (
                 <div key={index} className="flex gap-2">
                   <Input
                     {...register(`interests.${index}`)}
                     placeholder="e.g. Photography, Cooking, Sports..."
                   />
-                  {watchedInterests.length > 1 && (
+                  {(watchedInterests || []).length > 1 && (
                     <Button
                       type="button"
                       variant="outline"
@@ -541,7 +547,7 @@ export function Profile({
           {/* Social Media */}
           <Card>
             <CardHeader>
-              <CardTitle>Socials</CardTitle>
+              <CardTitle className="text-lg sm:text-xl">Socials</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -588,7 +594,7 @@ export function Profile({
           {/* Visible checkbox controlled via Controller to sync with RHF and Radix Checkbox */}
           <Card>
             <CardHeader>
-              <CardTitle>Visibility</CardTitle>
+              <CardTitle className="text-lg sm:text-xl">Visibility</CardTitle>
             </CardHeader>
             <CardContent>
               <Controller
@@ -644,10 +650,10 @@ export function Profile({
 
       {/* Profile Content */}
       <Card className="shadow-lg">
-        <CardContent className="p-8">
+        <CardContent className="p-4 sm:p-6 md:p-8">
           {/* Header Section */}
-          <div className="flex flex-col md:flex-row gap-6 mb-8 items-center">
-            <Avatar className="w-36 h-36 mx-auto md:mx-0 shadow-sm">
+          <div className="flex flex-col md:flex-row gap-4 md:gap-6 mb-6 md:mb-8 items-center">
+            <Avatar className="w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 mx-auto md:mx-0 shadow-sm">
               <AvatarImage src={profile.photoURL} alt={profile.name} />
               <AvatarFallback className="text-3xl">
                 {profile.name ? profile.name.split(' ').map(n => n[0]).join('').toUpperCase() : 'U'}
@@ -655,7 +661,7 @@ export function Profile({
             </Avatar>
             
             <div className="flex-1 text-center">
-              <h1 className="text-4xl font-extrabold mb-1 text-foreground">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold mb-1 text-foreground">
                 {profile.name}
               </h1>
 
@@ -744,12 +750,12 @@ export function Profile({
               {/* Interests next (centered) */}
               {profile.interests && profile.interests.length > 0 && (
                 <div className="mb-4 flex flex-col items-center">
-                  <h3 className="text-xl font-semibold mb-4 flex items-center gap-2 justify-center">
+                  <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 flex items-center gap-2 justify-center">
                     <Heart className="w-5 h-5" />
                     Interests
                   </h3>
                   <div className="flex flex-wrap gap-2 justify-center">
-                    {profile.interests.map((interest, index) => (
+                    {profile.interests?.map((interest, index) => (
                       <Badge key={index} variant="default" className="text-sm py-1.5 px-4 font-medium">
                         {interest}
                       </Badge>
@@ -760,14 +766,14 @@ export function Profile({
 
               {/* Conversation Starters last */}
               {profile.starters && profile.starters.length > 0 && (
-                <div className="mb-8 w-full">
-                  <h3 className="text-xl font-semibold mb-4 flex items-center gap-2 justify-center">
+                <div className="mb-4 sm:mb-6 md:mb-8 w-full">
+                  <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 flex items-center gap-2 justify-center">
                     <MessageCircle className="w-5 h-5" />
                     Conversation Starters
                   </h3>
-                  <div className="grid gap-3">
-                    {profile.starters.map((starter, index) => (
-                      <div key={index} className="bg-muted/40 rounded-lg p-4">
+                  <div className="grid gap-2 sm:gap-3">
+                    {profile.starters?.map((starter, index) => (
+                      <div key={index} className="bg-muted/40 rounded-lg p-3 sm:p-4">
                         <p className="text-sm font-medium">💬 {starter}</p>
                       </div>
                     ))}

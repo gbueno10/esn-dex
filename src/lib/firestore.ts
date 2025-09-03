@@ -24,8 +24,8 @@ export interface User {
 export interface Esner {
   name: string;
   photoURL: string;
-  starters: string[];
-  interests: string[];
+  starters?: string[];
+  interests?: string[];
   bio?: string;
   socials?: {
     instagram?: string;
