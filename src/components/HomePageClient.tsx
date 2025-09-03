@@ -93,6 +93,22 @@ export function HomePageClient({ featuredEsners }: HomePageClientProps) {
               </CardContent>
             </Card>
           </div>
+
+          {/* Terms Notice */}
+          <div className="pt-8 border-t border-border/50">
+            <p className="text-xs text-muted-foreground text-center">
+              By using this app, you agree to our{' '}
+              <a 
+                href="/terms" 
+                className="text-primary hover:underline"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Terms of Service
+              </a>
+              {' '}and assume full responsibility for your actions.
+            </p>
+          </div>
         </div>
       </div>
     </div>
