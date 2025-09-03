@@ -3,17 +3,26 @@ import { adminAuth, adminDb } from '@/lib/firebase-admin';
 
 export async function GET(request: NextRequest) {
   try {
-    const challengesSnapshot = await adminDb.collection('challenges').get();
-    const challenges = challengesSnapshot.docs.map((doc: any) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    // Check for challenges in the new esn-challenges collection
+    const challengesSnapshot = await adminDb.collection('esn-challenges').where('isActive', '==', true).get();
+    
+    const challenges = challengesSnapshot.docs.map((doc: any) => {
+      const data = doc.data();
+      return {
+        id: data.id,
+        title: data.title,
+        description: data.description,
+        category: data.category,
+        emoji: data.emoji
+      };
+    });
 
-    return NextResponse.json(challenges);
+    console.log(`API: Loaded ${challenges.length} challenges from Firestore`);
+    return NextResponse.json({ success: true, challenges });
   } catch (error: any) {
     console.error('Get challenges error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch challenges' },
+      { success: false, error: 'Failed to fetch challenges' },
       { status: 500 }
     );
   }
